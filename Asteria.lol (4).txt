@@ -401,14 +401,14 @@ esp.options.healthText = false
 esp:Load()
 
 --shit stuff
-local repo = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
+local repo = "https://raw.githubusercontent.com/mstudio45/LinoriaLib/main/"
 
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 local Window = Library:CreateWindow({
 
-	Title = "Asteria.lol v1.0.3",
+	Title = "I will fuck nigger",
 	Center = true,
 	AutoShow = true,
 	TabPadding = 8,
