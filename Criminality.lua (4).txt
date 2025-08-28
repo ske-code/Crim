@@ -1,4 +1,4 @@
-local repo = 'https://raw.githubusercontent.com/yourmakerqkeso/EverloseLib/main/'
+local repo = 'https://raw.githubusercontent.com/mstudio45/LinoriaLib/main/'
 
 Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
 ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
