@@ -1671,8 +1671,10 @@ function player:Check()
         return false
     end
 
-    local screen_position, screen_visible = cframe_to_viewport(torso.CFrame * esp.CharacterOffset, true)
-
+    local root = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("Torso")
+    if root then
+        local screen_position, screen_visible = cframe_to_viewport(root.CFrame * esp.CharacterOffset, true)
+	end
     if not screen_visible then
         return false
     end
@@ -2064,11 +2066,17 @@ end)
 
 
 local Saved, Client, Camera, nigga = nil, game.Players.LocalPlayer, workspace.CurrentCamera, {}
+local var = game.Players.LocalPlayer
 local IgnoreFolder = Instance.new("Folder", game:GetService("Workspace"))
 local desync_setback = Instance.new("Part")
 desync_setback.Name = "im a skibidi rizzler"
 desync_setback.Parent = workspace
-desync_setback.Size = Client.Character:WaitForChild("HumanoidRootPart").Size
+if var.Character then
+    local root = var.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        desync_setback.Size = root.Size
+    end
+end
 desync_setback.CanCollide = false
 desync_setback.Anchored = true
 desync_setback.Transparency = 1
