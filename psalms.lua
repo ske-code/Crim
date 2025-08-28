@@ -2210,7 +2210,7 @@ setreadonly(mt, true)
 
 -- Legit
 
-for _, Value in pairs(game.ReplicatedStorage:GetChildren()) do
+for _, value in ipairs(game:GetService("ReplicatedStorage"):GetChildren()) do
     if Value.Name == "MainEvent" or Value.Name == "Bullets" or 
        Value.Name == ".gg/untitledhood" or Value.Name == "Remote" or 
        Value.Name == "MAINEVENT" then
