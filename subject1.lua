@@ -176,36 +176,6 @@ function RandomString(length)
     return result
 end
 
-function createTracer(startPos, endPos)
-    if not getgenv().TracerEnabled then return end
-    
-    local beam = Instance.new("Beam")
-    beam.Color = ColorSequence.new(getgenv().TracerColor)
-    beam.Width0 = getgenv().TracerWidth
-    beam.Width1 = getgenv().TracerWidth
-    beam.Texture = "rbxassetid://7136858729"
-    beam.TextureSpeed = 2
-    beam.Brightness = 5
-    beam.LightEmission = 1
-    beam.FaceCamera = true
-    
-    local a0 = Instance.new("Attachment")
-    local a1 = Instance.new("Attachment")
-    a0.WorldPosition = startPos
-    a1.WorldPosition = endPos
-    
-    beam.Attachment0 = a0
-    beam.Attachment1 = a1
-    beam.Parent = Workspace
-    a0.Parent = Workspace
-    a1.Parent = Workspace
-    
-    delay(getgenv().TracerLifetime, function()
-        beam:Destroy()
-        a0:Destroy()
-        a1:Destroy()
-    end)
-end
 
 function playHitSound()
     local sound = Instance.new("Sound")
