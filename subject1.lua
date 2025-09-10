@@ -119,7 +119,6 @@ RageLeft:AddToggle('TargetLock', {
 RageRight:AddDropdown('TargetList', {
     Values = {},
     Default = 1,
-    Multi = true,
     Text = 'Target List',
     Callback = function(Value, Key, State)
         getgenv().LockedTargets = {}
@@ -134,7 +133,6 @@ RageRight:AddDropdown('TargetList', {
 RageRight:AddDropdown('Whitelist', {
     Values = {},
     Default = 1,
-    Multi = true,
     Text = 'Whitelist',
     Callback = function(Value, Key, State)
         getgenv().Whitelist = {}
