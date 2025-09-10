@@ -116,33 +116,6 @@ RageLeft:AddToggle('TargetLock', {
         end
     end
 })
-RageRight:AddDropdown('TargetList', {
-    Values = {},
-    Default = 1,
-    Text = 'Target List',
-    Callback = function(Value, Key, State)
-        getgenv().LockedTargets = {}
-        for name, selected in pairs(Options.TargetList.Value) do
-            if selected then
-                table.insert(getgenv().LockedTargets, name)
-            end
-        end
-    end
-})
-
-RageRight:AddDropdown('Whitelist', {
-    Values = {},
-    Default = 1,
-    Text = 'Whitelist',
-    Callback = function(Value, Key, State)
-        getgenv().Whitelist = {}
-        for name, selected in pairs(Options.Whitelist.Value) do
-            if selected then
-                table.insert(getgenv().Whitelist, name)
-            end
-        end
-    end
-})
 RageLeft:AddSlider('TracerWidth', {
     Text = 'Tracer Width',
     Default = 0.3,
@@ -214,31 +187,13 @@ function canSeeTarget(targetPart)
     return true
 end
 
-function isWhitelisted(player)
-    for _, whitelistedName in pairs(getgenv().Whitelist) do
-        if player.Name == whitelistedName then
-            return true
-        end
-    end
-    return false
-end
-
-function isInTargetList(player)
-    if #getgenv().LockedTargets == 0 then return true end
-    for _, targetName in pairs(getgenv().LockedTargets) do
-        if player.Name == targetName then
-            return true
-        end
-    end
-    return false
-end
 
 function getClosest()
     local closest = nil
     local shortest = math.huge
     
     for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character and not isWhitelisted(p) and isInTargetList(p) then
+        if p ~= LocalPlayer and p.Character then
             local h = p.Character:FindFirstChild("Humanoid")
             local head = p.Character:FindFirstChild("Head")
             
@@ -264,33 +219,6 @@ function getClosest()
     
     return closest
 end
-
-function updatePlayerLists()
-    local playerNames = {}
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            table.insert(playerNames, player.Name)
-        end
-    end
-    Options.TargetList:SetValues(playerNames)
-    Options.Whitelist:SetValues(playerNames)
-end
-
-updatePlayerLists()
-Players.PlayerAdded:Connect(function(player)
-    updatePlayerLists()
-    if getgenv().ESPEnabled then
-        updateESP()
-    end
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    updatePlayerLists()
-    if highlights[player] then
-        highlights[player]:Destroy()
-        highlights[player] = nil
-    end
-end)
 
 function getCurrentTool()
     if LocalPlayer.Character then
