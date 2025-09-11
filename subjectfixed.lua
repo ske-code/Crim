@@ -19,7 +19,7 @@ Library.ShowCustomCursor = true
 Library.NotifySide = "Left"
 
 local Window = Library:CreateWindow({
-    Title = 'ske.gg - Ragebot',
+    Title = 'ske.gg - Criminality',
     Center = true,
     AutoShow = true,
     Resizable = true,
@@ -55,10 +55,10 @@ RageLeft:AddToggle('RageEnabled', {
 })
 
 RageLeft:AddSlider('FireRate', {
-    Text = 'FireRate (Higher = Faster)',
+    Text = 'FireRate',
     Default = 5,
     Min = 1,
-    Max = 20,
+    Max = 450,
     Rounding = 0,
     Callback = function(Value)
         getgenv().FireRate = Value
