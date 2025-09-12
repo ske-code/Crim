@@ -356,3 +356,110 @@ SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
 SaveManager:BuildConfigSection(Tabs['UI Settings'])
 ThemeManager:ApplyToTab(Tabs['UI Settings'])
 SaveManager:LoadAutoloadConfig()
+local VisualTab = Window:AddTab('Visuals')
+local VisualLeft = VisualTab:AddLeftGroupbox('Player Modifications')
+
+getgenv().HeadlessEnabled = false
+getgenv().ForceFieldEnabled = false
+getgenv().ForceFieldColor = Color3.fromRGB(255, 0, 0)
+getgenv().ForceFieldTransparency = 0.5
+
+VisualLeft:AddToggle('HeadlessEnabled', {
+    Text = 'Headless',
+    Default = false,
+    Callback = function(Value)
+        getgenv().HeadlessEnabled = Value
+        applyHeadless()
+    end
+})
+
+VisualLeft:AddToggle('ForceFieldEnabled', {
+    Text = 'Force Field',
+    Default = false,
+    Callback = function(Value)
+        getgenv().ForceFieldEnabled = Value
+        applyForceField()
+    end
+})
+
+VisualLeft:AddToggle('ForceFieldColorToggle', {
+    Text = 'Force Field Color',
+    Default = false,
+    Callback = function(Value) end
+}):AddColorPicker('ForceFieldColor', {
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        getgenv().ForceFieldColor = Value
+        if getgenv().ForceFieldEnabled then
+            applyForceField()
+        end
+    end
+})
+
+VisualLeft:AddSlider('ForceFieldTransparency', {
+    Text = 'Force Field Transparency',
+    Default = 0.5,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(Value)
+        getgenv().ForceFieldTransparency = Value
+        if getgenv().ForceFieldEnabled then
+            applyForceField()
+        end
+    end
+})
+
+function applyHeadless()
+    if not LocalPlayer.Character then return end
+    
+    local head = LocalPlayer.Character:FindFirstChild("Head")
+    if head then
+        head.Transparency = getgenv().HeadlessEnabled and 1 or 0
+        
+        if getgenv().HeadlessEnabled then
+            for _, face in pairs(head:GetChildren()) do
+                if face:IsA("Decal") or face:IsA("Texture") then
+                    face:Destroy()
+                end
+            end
+        else
+            head.Transparency = 0
+        end
+    end
+end
+
+function applyForceField()
+    if not LocalPlayer.Character then return end
+    
+    for _, part in pairs(LocalPlayer.Character:GetChildren()) do
+        if part:IsA("BasePart") and part.Name ~= "Head" and part.Name ~= "HumanoidRootPart" then
+            if getgenv().ForceFieldEnabled then
+                part.Material = Enum.Material.ForceField
+                part.Color = getgenv().ForceFieldColor
+                part.Transparency = getgenv().ForceFieldTransparency
+            else
+                part.Material = Enum.Material.Plastic
+                part.Transparency = 0
+            end
+        end
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    character:WaitForChild("Head")
+    character:WaitForChild("HumanoidRootPart")
+    
+    if getgenv().HeadlessEnabled then
+        applyHeadless()
+    end
+    
+    if getgenv().ForceFieldEnabled then
+        applyForceField()
+    end
+end)
+
+if LocalPlayer.Character then
+    applyHeadless()
+    applyForceField()
+end
