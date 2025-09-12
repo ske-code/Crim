@@ -325,16 +325,46 @@ function isInTargetList(player)
 end
 
 function getClosest()
+    if getgenv().TargetLock and getgenv().LockedTarget and getgenv().LockedTarget.Character then
+        local head = getgenv().LockedTarget.Character:FindFirstChild("Head")
+        local h = getgenv().LockedTarget.Character:FindFirstChild("Humanoid")
+        if head and h and h.Health > 0 and canSeeTarget(head) then
+            return head
+        end
+    end
+
     local closest = nil
     local shortest = math.huge
-    
+
     for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character and not isWhitelisted(p) and isInTargetList(p) then
+        if p ~= LocalPlayer and p.Character then
             local h = p.Character:FindFirstChild("Humanoid")
             local head = p.Character:FindFirstChild("Head")
-            
-            if h and h.Health > 0 and head then
-                if canSeeTarget(head) then
+            if h and h.Health > 0 and head and canSeeTarget(head) then
+
+                local ignore = false
+                if not getgenv().TargetLock and #getgenv().Whitelist > 0 then
+                    for _, name in ipairs(getgenv().Whitelist) do
+                        if p.Name == name then
+                            ignore = true
+                            break
+                        end
+                    end
+                end
+                if ignore then continue end
+
+                local validTarget = true
+                if #getgenv().TargetList > 0 then
+                    validTarget = false
+                    for _, name in ipairs(getgenv().TargetList) do
+                        if p.Name == name then
+                            validTarget = true
+                            break
+                        end
+                    end
+                end
+
+                if validTarget then
                     local dist = (head.Position - Camera.CFrame.Position).Magnitude
                     if dist < shortest then
                         shortest = dist
@@ -347,10 +377,9 @@ function getClosest()
             end
         end
     end
-    
+
     return closest
 end
-
 function updatePlayerLists()
     local playerNames = {}
     for _, player in pairs(Players:GetPlayers()) do
