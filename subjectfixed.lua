@@ -191,14 +191,17 @@ end
 function createTracer(startPos, endPos)
     if not getgenv().TracerEnabled then return end
     
+    local tracerModel = Instance.new("Model")
+    tracerModel.Name = "TracerBeam"
+    
     local beam = Instance.new("Beam")
     beam.Color = ColorSequence.new(getgenv().TracerColor)
     beam.Width0 = getgenv().TracerWidth
     beam.Width1 = getgenv().TracerWidth
     beam.Texture = "rbxassetid://7136858729"
-    beam.TextureSpeed = 2
-    beam.Brightness = 5
-    beam.LightEmission = 1
+    beam.TextureSpeed = getgenv().TracerTextureSpeed
+    beam.Brightness = getgenv().TracerBrightness
+    beam.LightEmission = getgenv().TracerLightEmission
     beam.FaceCamera = true
     
     local a0 = Instance.new("Attachment")
@@ -208,15 +211,17 @@ function createTracer(startPos, endPos)
     
     beam.Attachment0 = a0
     beam.Attachment1 = a1
-    beam.Parent = Workspace
-    a0.Parent = Workspace
-    a1.Parent = Workspace
+    
+    beam.Parent = tracerModel
+    a0.Parent = tracerModel
+    a1.Parent = tracerModel
+    tracerModel.Parent = Workspace
     
     delay(getgenv().TracerLifetime, function()
-        beam:Destroy()
-        a0:Destroy()
-        a1:Destroy()
+        tracerModel:Destroy()
     end)
+    
+    return tracerModel
 end
 
 function playHitSound()
