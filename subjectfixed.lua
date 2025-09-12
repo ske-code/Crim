@@ -171,42 +171,6 @@ function RandomString(length)
     return result
 end
 
-function createTracer(startPos, endPos)
-    if not getgenv().TracerEnabled then return end
-    
-    local tracerModel = Instance.new("Model")
-    tracerModel.Name = "TracerBeam"
-    
-    local beam = Instance.new("Beam")
-    beam.Color = ColorSequence.new(getgenv().TracerColor)  
-    beam.Width0 = getgenv().TracerWidth
-    beam.Width1 = getgenv().TracerWidth
-    beam.Texture = "rbxassetid://7136858729"
-    beam.TextureSpeed = getgenv().TracerTextureSpeed
-    beam.Brightness = 5
-    beam.LightEmission = 5
-    beam.FaceCamera = true
-    
-    local a0 = Instance.new("Attachment")
-    local a1 = Instance.new("Attachment")
-    a0.WorldPosition = startPos
-    a1.WorldPosition = endPos
-    
-    beam.Attachment0 = a0
-    beam.Attachment1 = a1
-    
-    beam.Parent = tracerModel
-    a0.Parent = tracerModel
-    a1.Parent = tracerModel
-    tracerModel.Parent = Workspace
-    
-    delay(getgenv().TracerLifetime, function()
-        tracerModel:Destroy()
-    end)
-    
-    return tracerModel
-end
-
 RageLeft:AddToggle('TracerEnabled', {
     Text = 'Tracer',
     Default = false,
@@ -228,6 +192,40 @@ function playHitSound()
     sound.Parent = Camera
     sound:Destroy()
 end
+getgenv().TracerOffset = Vector3.new(0, 0, 0)
+
+RageLeft:AddSlider('TracerOffsetX', {
+    Text = 'Tracer Offset X',
+    Default = 0,
+    Min = 0,
+    Max = 50,
+    Rounding = 1,
+    Callback = function(v)
+        getgenv().TracerOffset = Vector3.new(v, getgenv().TracerOffset.Y, getgenv().TracerOffset.Z)
+    end
+})
+
+RageLeft:AddSlider('TracerOffsetY', {
+    Text = 'Tracer Offset Y',
+    Default = 0,
+    Min = 0,
+    Max = 50,
+    Rounding = 1,
+    Callback = function(v)
+        getgenv().TracerOffset = Vector3.new(getgenv().TracerOffset.X, v, getgenv().TracerOffset.Z)
+    end
+})
+
+RageLeft:AddSlider('TracerOffsetZ', {
+    Text = 'Tracer Offset Z',
+    Default = 0,
+    Min = 0,
+    Max = 50,
+    Rounding = 1,
+    Callback = function(v)
+        getgenv().TracerOffset = Vector3.new(getgenv().TracerOffset.X, getgenv().TracerOffset.Y, v)
+    end
+})
 
 function canSeeTarget(targetPart)
     if not getgenv().VisibilityCheck then return true end
@@ -292,6 +290,44 @@ function getCurrentTool()
         end
     end
     return nil
+end
+function createTracer(startPos, endPos)
+    if not getgenv().TracerEnabled then return end
+
+    local offset = getgenv().TracerOffset or Vector3.zero
+    startPos = startPos + offset
+
+    local tracerModel = Instance.new("Model")
+    tracerModel.Name = "TracerBeam"
+
+    local beam = Instance.new("Beam")
+    beam.Color = ColorSequence.new(getgenv().TracerColor)
+    beam.Width0 = getgenv().TracerWidth
+    beam.Width1 = getgenv().TracerWidth
+    beam.Texture = "rbxassetid://7136858729"
+    beam.TextureSpeed = 1
+    beam.Brightness = 5
+    beam.LightEmission = 3
+    beam.FaceCamera = true
+
+    local a0 = Instance.new("Attachment")
+    local a1 = Instance.new("Attachment")
+    a0.WorldPosition = startPos
+    a1.WorldPosition = endPos
+
+    beam.Attachment0 = a0
+    beam.Attachment1 = a1
+
+    beam.Parent = tracerModel
+    a0.Parent = tracerModel
+    a1.Parent = tracerModel
+    tracerModel.Parent = Workspace
+
+    delay(getgenv().TracerLifetime, function()
+        tracerModel:Destroy()
+    end)
+
+    return tracerModel
 end
 
 function shoot(head)
