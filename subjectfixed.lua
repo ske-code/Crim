@@ -98,13 +98,7 @@ RageLeft:AddToggle('TracerEnabled', {
     Callback = function(Value)
         getgenv().TracerEnabled = Value
     end
-}):AddColorPicker('TracerColor', {
-    Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(Value)
-        getgenv().TracerColor = Value
-    end
 })
-
 RageLeft:AddSlider('TracerWidth', {
     Text = 'Tracer Width',
     Default = 0.3,
@@ -155,11 +149,6 @@ LogsRight:AddToggle('HitNotifyColorToggle', {
     Text = 'Notify Color',
     Default = false,
     Callback = function(Value) end
-}):AddColorPicker('HitNotifyColor', {
-    Default = Color3.fromRGB(0, 255, 0),
-    Callback = function(Value)
-        getgenv().HitNotifyColor = Value
-    end
 })
 
 function showHitNotify(targetName, damage, hitPart)
@@ -195,7 +184,7 @@ function createTracer(startPos, endPos)
     tracerModel.Name = "TracerBeam"
     
     local beam = Instance.new("Beam")
-    beam.Color = ColorSequence.new(getgenv().TracerColor)
+    beam.Color = ColorSequence.new(Color3.fromRGB(255, 255, 0))
     beam.Width0 = getgenv().TracerWidth
     beam.Width1 = getgenv().TracerWidth
     beam.Texture = "rbxassetid://7136858729"
