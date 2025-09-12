@@ -463,3 +463,265 @@ if LocalPlayer.Character then
     applyHeadless()
     applyForceField()
 end
+local VisualRight = VisualTab:AddRightGroupbox('ESP Settings')
+
+getgenv().ESPEnabled = false
+getgenv().ESPColor = Color3.fromRGB(255, 0, 0)
+getgenv().ArrowsEnabled = false
+getgenv().HighlightEnabled = false
+getgenv().HealthBarEnabled = false
+getgenv().NameTagsEnabled = false
+getgenv().ShowDisplayName = false
+
+VisualRight:AddToggle('ESPEnabled', {
+    Text = 'ESP Enabled',
+    Default = false,
+    Callback = function(Value)
+        getgenv().ESPEnabled = Value
+        updateESP()
+    end
+})
+
+VisualRight:AddToggle('ESPColorToggle', {
+    Text = 'ESP Color',
+    Default = false,
+    Callback = function(Value) end
+}):AddColorPicker('ESPColor', {
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        getgenv().ESPColor = Value
+        updateESP()
+    end
+})
+
+VisualRight:AddToggle('ArrowsEnabled', {
+    Text = 'Arrows',
+    Default = false,
+    Callback = function(Value)
+        getgenv().ArrowsEnabled = Value
+        updateESP()
+    end
+})
+
+VisualRight:AddToggle('HighlightEnabled', {
+    Text = 'Highlight',
+    Default = false,
+    Callback = function(Value)
+        getgenv().HighlightEnabled = Value
+        updateESP()
+    end
+})
+
+VisualRight:AddToggle('HealthBarEnabled', {
+    Text = 'Health Bar',
+    Default = false,
+    Callback = function(Value)
+        getgenv().HealthBarEnabled = Value
+        updateESP()
+    end
+})
+
+VisualRight:AddToggle('NameTagsEnabled', {
+    Text = 'Name Tags',
+    Default = false,
+    Callback = function(Value)
+        getgenv().NameTagsEnabled = Value
+        updateESP()
+    end
+})
+
+VisualRight:AddToggle('ShowDisplayName', {
+    Text = 'Use Display Name',
+    Default = false,
+    Callback = function(Value)
+        getgenv().ShowDisplayName = Value
+        updateESP()
+    end
+})
+
+local arrows = {}
+local highlights = {}
+local healthBars = {}
+local nameTags = {}
+
+function updateESP()
+    if not getgenv().ESPEnabled then
+        clearESP()
+        return
+    end
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+            
+            if humanoid and humanoidRootPart then
+                -- Arrows
+                if getgenv().ArrowsEnabled then
+                    if not arrows[player] then
+                        createArrow(player)
+                    end
+                else
+                    if arrows[player] then
+                        arrows[player]:Destroy()
+                        arrows[player] = nil
+                    end
+                end
+
+                -- Highlight
+                if getgenv().HighlightEnabled then
+                    if not highlights[player] then
+                        createHighlight(player)
+                    else
+                        highlights[player].FillColor = getgenv().ESPColor
+                    end
+                else
+                    if highlights[player] then
+                        highlights[player]:Destroy()
+                        highlights[player] = nil
+                    end
+                end
+
+                -- Health Bar
+                if getgenv().HealthBarEnabled then
+                    if not healthBars[player] then
+                        createHealthBar(player)
+                    else
+                        updateHealthBar(player)
+                    end
+                else
+                    if healthBars[player] then
+                        healthBars[player]:Destroy()
+                        healthBars[player] = nil
+                    end
+                end
+
+                -- Name Tags
+                if getgenv().NameTagsEnabled then
+                    if not nameTags[player] then
+                        createNameTag(player)
+                    else
+                        updateNameTag(player)
+                    end
+                else
+                    if nameTags[player] then
+                        nameTags[player]:Destroy()
+                        nameTags[player] = nil
+                    end
+                end
+            end
+        else
+            clearPlayerESP(player)
+        end
+    end
+end
+
+function createArrow(player)
+    if arrows[player] then return end
+    
+    local arrow = Drawing.new("Triangle")
+    arrow.Color = getgenv().ESPColor
+    arrow.Filled = true
+    arrow.Thickness = 1
+    arrow.Visible = true
+    arrows[player] = arrow
+end
+
+function createHighlight(player)
+    if highlights[player] then return end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = player.Character
+    highlight.FillColor = getgenv().ESPColor
+    highlight.FillTransparency = 0
+    highlight.OutlineColor = Color3.new(0, 0, 0)
+    highlight.OutlineTransparency = 1
+    highlight.Parent = player.Character
+    highlights[player] = highlight
+end
+
+function createHealthBar(player)
+    if healthBars[player] then return end
+    
+  local bar = Drawing.new("Square")
+    bar.Color = Color3.fromRGB(0, 255, 0)
+    bar.Filled = true
+    bar.Thickness = 1
+    bar.Visible = true
+    bar.Size = Vector2.new(2, 20)
+    healthBars[player] = bar
+end
+
+function createNameTag(player)
+    if nameTags[player] then return end
+    
+    local nameTag = Drawing.new("Text")
+    nameTag.Color = getgenv().ESPColor
+    nameTag.Size = 14
+    nameTag.Outline = true
+    nameTag.OutlineColor = Color3.new(0, 0, 0)
+    nameTag.Visible = true
+    nameTags[player] = nameTag
+end
+
+function updateHealthBar(player)
+    local bar = healthBars[player]
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    if bar and humanoid then
+        local healthPercent = humanoid.Health / humanoid.MaxHealth
+        bar.Size = Vector2.new(2, 20 * healthPercent)
+        bar.Color = Color3.fromRGB(255 * (1 - healthPercent), 255 * healthPercent, 0)
+    end
+end
+
+function updateNameTag(player)
+    local nameTag = nameTags[player]
+    if nameTag then
+        local name = getgenv().ShowDisplayName and player.DisplayName or player.Name
+        nameTag.Text = name
+    end
+end
+
+function clearPlayerESP(player)
+    if arrows[player] then
+        arrows[player]:Destroy()
+        arrows[player] = nil
+    end
+    if highlights[player] then
+        highlights[player]:Destroy()
+        highlights[player] = nil
+    end
+    if healthBars[player] then
+        healthBars[player]:Destroy()
+        healthBars[player] = nil
+    end
+    if nameTags[player] then
+        nameTags[player]:Destroy()
+        nameTags[player] = nil
+    end
+end
+
+function clearESP()
+    for player in pairs(arrows) do
+        clearPlayerESP(player)
+    end
+end
+
+task.spawn(function()
+    while true do
+        if getgenv().ESPEnabled then
+            updateESP()
+        end
+        wait(0.1)
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    if getgenv().ESPEnabled then
+        updateESP()
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    clearPlayerESP(player)
+end)
