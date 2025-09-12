@@ -92,13 +92,7 @@ RageLeft:AddToggle('VisibilityCheck', {
     end
 })
 
-RageLeft:AddToggle('TracerEnabled', {
-    Text = 'Tracer',
-    Default = false,
-    Callback = function(Value)
-        getgenv().TracerEnabled = Value
-    end
-})
+
 RageLeft:AddSlider('TracerWidth', {
     Text = 'Tracer Width',
     Default = 0.3,
@@ -114,7 +108,7 @@ RageLeft:AddSlider('TracerLifetime', {
     Text = 'Tracer Lifetime',
     Default = 0.3,
     Min = 0.1,
-    Max = 1,
+    Max = 100,
     Rounding = 1,
     Callback = function(Value)
         getgenv().TracerLifetime = Value
@@ -184,13 +178,13 @@ function createTracer(startPos, endPos)
     tracerModel.Name = "TracerBeam"
     
     local beam = Instance.new("Beam")
-    beam.Color = ColorSequence.new(Color3.fromRGB(255, 255, 0))
+    beam.Color = ColorSequence.new(getgenv().TracerColor)  
     beam.Width0 = getgenv().TracerWidth
     beam.Width1 = getgenv().TracerWidth
     beam.Texture = "rbxassetid://7136858729"
     beam.TextureSpeed = getgenv().TracerTextureSpeed
-    beam.Brightness = getgenv().TracerBrightness
-    beam.LightEmission = getgenv().TracerLightEmission
+    beam.Brightness = 5
+    beam.LightEmission = 5
     beam.FaceCamera = true
     
     local a0 = Instance.new("Attachment")
@@ -212,6 +206,19 @@ function createTracer(startPos, endPos)
     
     return tracerModel
 end
+
+RageLeft:AddToggle('TracerEnabled', {
+    Text = 'Tracer',
+    Default = false,
+    Callback = function(Value)
+        getgenv().TracerEnabled = Value
+    end
+}):AddColorPicker('TracerColor', {
+    Default = Color3.fromRGB(255, 0, 0),  
+    Callback = function(Value)
+        getgenv().TracerColor = Value  
+    end
+})
 
 function playHitSound()
     local sound = Instance.new("Sound")
