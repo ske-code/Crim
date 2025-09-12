@@ -257,12 +257,79 @@ function canSeeTarget(targetPart)
     return true
 end
 
+local RageRight = Tabs.Ragebot:AddRightGroupbox('Target Settings')
+
+getgenv().TargetLock = false
+getgenv().LockedTarget = nil
+getgenv().TargetList = {}
+getgenv().Whitelist = {}
+
+RageRight:AddToggle('TargetLock', {
+    Text = 'Target Lock',
+    Default = false,
+    Callback = function(Value)
+        getgenv().TargetLock = Value
+        if not Value then
+            getgenv().LockedTarget = nil
+        end
+    end
+})
+
+RageRight:AddDropdown('TargetList', {
+    Values = {},
+    Default = 1,
+    Multi = true,
+    Text = 'Target List',
+    Callback = function(Value, Key, State)
+        getgenv().TargetList = {}
+        for name, selected in pairs(Options.TargetList.Value) do
+            if selected then
+                table.insert(getgenv().TargetList, name)
+            end
+        end
+    end
+})
+
+RageRight:AddDropdown('Whitelist', {
+    Values = {},
+    Default = 1,
+    Multi = true,
+    Text = 'Whitelist',
+    Callback = function(Value, Key, State)
+        getgenv().Whitelist = {}
+        for name, selected in pairs(Options.Whitelist.Value) do
+            if selected then
+                table.insert(getgenv().Whitelist, name)
+            end
+        end
+    end
+})
+
+function isWhitelisted(player)
+    for _, whitelistedName in pairs(getgenv().Whitelist) do
+        if player.Name == whitelistedName then
+            return true
+        end
+    end
+    return false
+end
+
+function isInTargetList(player)
+    if #getgenv().TargetList == 0 then return true end
+    for _, targetName in pairs(getgenv().TargetList) do
+        if player.Name == targetName then
+            return true
+        end
+    end
+    return false
+end
+
 function getClosest()
     local closest = nil
     local shortest = math.huge
     
     for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character then
+        if p ~= LocalPlayer and p.Character and not isWhitelisted(p) and isInTargetList(p) then
             local h = p.Character:FindFirstChild("Humanoid")
             local head = p.Character:FindFirstChild("Head")
             
@@ -272,6 +339,9 @@ function getClosest()
                     if dist < shortest then
                         shortest = dist
                         closest = head
+                        if getgenv().TargetLock then
+                            getgenv().LockedTarget = p
+                        end
                     end
                 end
             end
@@ -281,6 +351,20 @@ function getClosest()
     return closest
 end
 
+function updatePlayerLists()
+    local playerNames = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(playerNames, player.Name)
+        end
+    end
+    Options.TargetList:SetValues(playerNames)
+    Options.Whitelist:SetValues(playerNames)
+end
+
+updatePlayerLists()
+Players.PlayerAdded:Connect(updatePlayerLists)
+Players.PlayerRemoving:Connect(updatePlayerLists)
 function getCurrentTool()
     if LocalPlayer.Character then
         for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
