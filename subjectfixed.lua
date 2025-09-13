@@ -132,13 +132,6 @@ RageLeft:AddSlider('PredictionAmount', {
         getgenv().PredictionAmount = Value
     end
 })
-RageLeft:AddToggle('Wallbang', {
-    Text = 'Wallbang',
-    Default = false,
-    Callback = function(Value)
-        getgenv().Wallbang = Value
-    end
-})
 RageLeft:AddToggle('VisibilityCheck', {
     Text = 'Visibility Check',
     Default = true,
@@ -543,27 +536,36 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local RageLeft = Tabs.Ragebot:AddLeftGroupbox('Ragebot Settings')
+local RageLeft = Tabs.Ragebot:AddLeftGroupbox('Misc setting')
 
-getgenv().Wallhack = false
-getgenv().WallhackStrength = 100
+getgenv().InfAmmo = false
+getgenv().Wallbang = false
+getgenv().WallbangDistance = 50
 
-RageLeft:AddToggle('Wallhack', {
-    Text = 'Wallhack',
+RageLeft:AddToggle('InfAmmo', {
+    Text = 'Infinite Ammo (Future(',
     Default = false,
     Callback = function(Value)
-        getgenv().Wallhack = Value
+        getgenv().InfAmmo = Value
     end
 })
 
-RageLeft:AddSlider('WallhackStrength', {
-    Text = 'Wallhack Strength',
-    Default = 100,
+RageLeft:AddToggle('Wallbang', {
+    Text = 'Wallbang',
+    Default = false,
+    Callback = function(Value)
+        getgenv().Wallbang = Value
+    end
+})
+
+RageLeft:AddSlider('WallbangDistance', {
+    Text = 'Wallbang Distance',
+    Default = 50,
     Min = 10,
-    Max = 500,
+    Max = 200,
     Rounding = 0,
     Callback = function(Value)
-        getgenv().WallhackStrength = Value
+        getgenv().WallbangDistance = Value
     end
 })
 
@@ -577,7 +579,10 @@ function shoot(head)
     
     local ammo = values:FindFirstChild("SERVER_Ammo")
     local storedAmmo = values:FindFirstChild("SERVER_StoredAmmo")
-    if not ammo or not storedAmmo or ammo.Value <= 0 then return end
+    if not ammo or not storedAmmo then return end
+    
+    
+    if not getgenv().InfAmmo and ammo.Value <= 0 then return end
     
     local hitPosition = head.Position
     local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
@@ -588,36 +593,29 @@ function shoot(head)
         hitDirection = (hitPosition - Camera.CFrame.Position).Unit
     end
     
+    local shootPosition = Camera.CFrame.Position
     
-    if getgenv().Wallhack then
-        local modifiedStartPos = hitPosition + (hitDirection * -getgenv().WallhackStrength)
-        local modifiedDirection = (hitPosition - modifiedStartPos).Unit
-        
-        hitPosition = hitPosition
-        hitDirection = modifiedDirection
-        
     
-        local randomKey = RandomString(30) .. "0"
-        local args1 = {tick(), randomKey, tool, "FDS9I83", modifiedStartPos, {hitDirection}, true}
-        local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
-        
-        GNX_S:FireServer(unpack(args1))
-        ZFKLF__H:FireServer(unpack(args2))
-        
-	else
-        local randomKey = RandomString(30) .. "0"
-        local args1 = {tick(), randomKey, tool, "FDS9I83", Camera.CFrame.Position, {hitDirection}, false}
-        local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
-        
-        GNX_S:FireServer(unpack(args1))
-        ZFKLF__H:FireServer(unpack(args2))
+    if getgenv().Wallbang then
+        shootPosition = hitPosition + (hitDirection * -getgenv().WallbangDistance)
     end
     
-    ammo.Value = math.max(ammo.Value - 1, 0)
+    local randomKey = RandomString(30) .. "0"
+    local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, getgenv().Wallbang}
+    local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
+    
+    GNX_S:FireServer(unpack(args1))
+    ZFKLF__H:FireServer(unpack(args2))
+    
+    
+    if not getgenv().InfAmmo then
+        ammo.Value = math.max(ammo.Value - 1, 0)
+    end
+    
     hitMarker:Fire(head)
     storedAmmo.Value = storedAmmo.Value
     
-    createTracer(Camera.CFrame.Position, hitPosition)
+    createTracer(shootPosition, hitPosition)
     playHitSound()
     
     local player = Players:GetPlayerFromCharacter(head.Parent)
