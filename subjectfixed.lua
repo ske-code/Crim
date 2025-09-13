@@ -275,6 +275,41 @@ RageLeft:AddSlider('TracerOffsetZ', {
         getgenv().TracerOffset = Vector3.new(getgenv().TracerOffset.X, getgenv().TracerOffset.Y, v)
     end
 })
+getgenv().RandomTracer = false
+getgenv().RandomTracerOffset = 5
+RageLeft:AddToggle('RandomTracer', {
+    Text = 'Random Bullet',
+    Default = false,
+    Callback = function(Value)
+        getgenv().RandomTracer = Value
+    end
+})
+
+RageLeft:AddSlider('RandomTracerOffset', {
+    Text = 'Random Tracer Offset',
+    Default = 5,
+    Min = 1,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().RandomTracerOffset = Value
+    end
+})
+function getRandomOffsetPosition(position, direction)
+    if not getgenv().RandomTracer then return position end
+
+    local angleNoise = Vector3.new(
+        math.random() - 0.5,
+        math.random() - 0.5,
+        math.random() - 0.5
+    ).Unit * 0.1
+
+    local noisyDirection = (direction.Unit + angleNoise).Unit
+    local offsetMagnitude = math.random(1, getgenv().RandomTracerOffset)
+    local offset = noisyDirection * offsetMagnitude
+
+    return position + offset
+end
 
 function canSeeTarget(targetPart)
     if not getgenv().VisibilityCheck then return true end
@@ -458,17 +493,20 @@ function createTracer(startPos, endPos)
 
     local offset = getgenv().TracerOffset or Vector3.zero
     startPos = startPos + offset
+    local direction = (endPos - startPos)
+
     if getgenv().RandomTracer then
-        visualStartPos = getRandomOffsetPosition(startPos)
-        visualEndPos = getRandomOffsetPosition(endPos)
-	end
+        startPos = getRandomOffsetPosition(startPos, direction)
+        endPos = getRandomOffsetPosition(endPos, direction)
+    end
+
     local tracerModel = Instance.new("Model")
     tracerModel.Name = "TracerBeam"
 
     local beam = Instance.new("Beam")
-    beam.Color = ColorSequence.new(getgenv().TracerColor)
-    beam.Width0 = getgenv().TracerWidth
-    beam.Width1 = getgenv().TracerWidth
+    beam.Color = ColorSequence.new(getgenv().TracerColor or Color3.new(1, 0, 0))
+    beam.Width0 = getgenv().TracerWidth or 0.3
+    beam.Width1 = getgenv().TracerWidth or 0.3
     beam.Texture = "rbxassetid://7136858729"
     beam.TextureSpeed = 1
     beam.Brightness = 5
@@ -486,10 +524,10 @@ function createTracer(startPos, endPos)
     beam.Parent = tracerModel
     a0.Parent = tracerModel
     a1.Parent = tracerModel
-    tracerModel.Parent = Workspace
+    tracerModel.Parent = workspace
 
-    delay(getgenv().TracerLifetime, function()
-        tracerModel:Destroy()
+    delay(getgenv().TracerLifetime or 0.3, function()
+        if tracerModel then tracerModel:Destroy() end
     end)
 
     return tracerModel
@@ -1101,30 +1139,3 @@ PlayerLeft:AddToggle('NoFallDamage', {
 		end
 })
 
-RageLeft:AddToggle('RandomTracer', {
-    Text = 'Random Bullet',
-    Default = false,
-    Callback = function(Value)
-        getgenv().RandomTracer = Value
-    end
-})
-
-RageLeft:AddSlider('RandomTracerOffset', {
-    Text = 'Random Tracer Offset',
-    Default = 5,
-    Min = 1,
-    Max = 100,
-    Rounding = 0,
-    Callback = function(Value)
-        getgenv().RandomTracerOffset = Value
-    end
-})
-
-function getRandomOffsetPosition(position)
-    local offset = Vector3.new(
-        math.random(-getgenv().RandomTracerOffset, getgenv().RandomTracerOffset),
-        math.random(-getgenv().RandomTracerOffset, getgenv().RandomTracerOffset),
-        math.random(-getgenv().RandomTracerOffset, getgenv().RandomTracerOffset)
-    )
-    return position + offset
-end
