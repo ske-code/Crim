@@ -536,39 +536,66 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local RageLeft = Tabs.Ragebot:AddLeftGroupbox('Misc setting')
+local RageLeft = Tabs.Ragebot:AddLeftGroupbox('Teleport Settings')
 
-getgenv().InfAmmo = false
-getgenv().Wallbang = false
-getgenv().WallbangDistance = 50
+getgenv().TeleportToTarget = false
+getgenv().TeleportWaitTime = 0.1
 
-RageLeft:AddToggle('InfAmmo', {
-    Text = 'Infinite Ammo (Future(',
+RageLeft:AddToggle('TeleportToTarget', {
+    Text = 'Teleport to Target',
     Default = false,
     Callback = function(Value)
-        getgenv().InfAmmo = Value
+        getgenv().TeleportToTarget = Value
+        if Value then
+            startTeleportLoop()
+        end
     end
 })
 
-RageLeft:AddToggle('Wallbang', {
-    Text = 'Wallbang',
-    Default = false,
+RageLeft:AddSlider('TeleportWaitTime', {
+    Text = 'Teleport Delay',
+    Default = 0.1,
+    Min = 0.05,
+    Max = 1,
+    Rounding = 2,
     Callback = function(Value)
-        getgenv().Wallbang = Value
+        getgenv().TeleportWaitTime = Value
     end
 })
-
-RageLeft:AddSlider('WallbangDistance', {
-    Text = 'Wallbang Distance',
-    Default = 50,
-    Min = 10,
-    Max = 200,
-    Rounding = 0,
-    Callback = function(Value)
-        getgenv().WallbangDistance = Value
-    end
-})
-
+local rs = game:GetService("ReplicatedStorage")
+local event = rs:FindFirstChild("Events"):FindFirstChild("__DFfDD")
+function startTeleportLoop()
+    spawn(function()
+        while getgenv().TeleportToTarget do
+            wait(getgenv().TeleportWaitTime)
+            
+            local target = getClosest()
+            if target and LocalPlayer.Character then
+                local humanoidRootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    
+                    local targetPos = target.Position
+                    local cameraDirection = (targetPos - Camera.CFrame.Position).Unit
+                    local teleportPos = targetPos + (cameraDirection * -5) 
+                    
+                    
+                    humanoidRootPart.CFrame = CFrame.new(teleportPos)
+                    
+                    
+                    local func = {
+                        [1] = "__--r",
+                        [2] = humanoidRootPart.Position,
+                        [3] = humanoidRootPart.CFrame * CFrame.Angles(0, 0, 0)
+                    }
+                    
+                    pcall(function()
+                        event:FireServer(unpack(func))
+                    end)
+                end
+            end
+        end
+    end)
+end
 function shoot(head)
     local tool = getCurrentTool()
     if not tool then return end
@@ -596,10 +623,6 @@ function shoot(head)
     local shootPosition = Camera.CFrame.Position
     
     
-    if getgenv().Wallbang then
-        shootPosition = hitPosition + (hitDirection * -getgenv().WallbangDistance)
-    end
-    
     local randomKey = RandomString(30) .. "0"
     local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, getgenv().Wallbang}
     local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
@@ -607,11 +630,7 @@ function shoot(head)
     GNX_S:FireServer(unpack(args1))
     ZFKLF__H:FireServer(unpack(args2))
     
-    
-    if not getgenv().InfAmmo then
-        ammo.Value = math.max(ammo.Value - 1, 0)
-    end
-    
+    ammo.Value = math.max(ammo.Value - 1, 0)
     hitMarker:Fire(head)
     storedAmmo.Value = storedAmmo.Value
     
@@ -1186,6 +1205,6 @@ PlayerLeft:AddToggle('NoFallDamage', {
             playerFunctions.nofalldmg()
             Library:Notify("No Fall Damage enabled!", 3)
         end
-		end
+	end
 })
 
