@@ -543,44 +543,83 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+local RageLeft = Tabs.Ragebot:AddLeftGroupbox('Ragebot Settings')
+
+getgenv().Wallhack = false
+getgenv().WallhackStrength = 100
+
+RageLeft:AddToggle('Wallhack', {
+    Text = 'Wallhack',
+    Default = false,
+    Callback = function(Value)
+        getgenv().Wallhack = Value
+    end
+})
+
+RageLeft:AddSlider('WallhackStrength', {
+    Text = 'Wallhack Strength',
+    Default = 100,
+    Min = 10,
+    Max = 500,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().WallhackStrength = Value
+    end
+})
+
 function shoot(head)
     local tool = getCurrentTool()
     if not tool then return end
+    
     local values = tool:FindFirstChild("Values")
     local hitMarker = tool:FindFirstChild("Hitmarker")
     if not values or not hitMarker then return end
+    
     local ammo = values:FindFirstChild("SERVER_Ammo")
     local storedAmmo = values:FindFirstChild("SERVER_StoredAmmo")
     if not ammo or not storedAmmo or ammo.Value <= 0 then return end
+    
     local hitPosition = head.Position
-    local shootOrigin = Camera.CFrame.Position
-    local hitDirection = (hitPosition - shootOrigin).Unit
+    local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+    
     if getgenv().Prediction then
         local velocity = head.Velocity or Vector3.zero
         hitPosition = hitPosition + velocity * getgenv().PredictionAmount
-        hitDirection = (hitPosition - shootOrigin).Unit
+        hitDirection = (hitPosition - Camera.CFrame.Position).Unit
     end
-    local params = RaycastParams.new()
-    params.FilterDescendantsInstances = {LocalPlayer.Character}
-    params.FilterType = Enum.RaycastFilterType.Blacklist
-    local rayResult = workspace:Raycast(shootOrigin, (hitPosition - shootOrigin), params)
-    if getgenv().Wallbang and rayResult and rayResult.Instance and not rayResult.Instance:IsDescendantOf(head.Parent) then
-        local c = getClosest()
-        if c then
-            shootOrigin = c.Position + Vector3.new(0,2,0)
-            hitDirection = (hitPosition - shootOrigin).Unit
-        end
+    
+    
+    if getgenv().Wallhack then
+        local modifiedStartPos = hitPosition + (hitDirection * -getgenv().WallhackStrength)
+        local modifiedDirection = (hitPosition - modifiedStartPos).Unit
+        
+        hitPosition = hitPosition
+        hitDirection = modifiedDirection
+        
+    
+        local randomKey = RandomString(30) .. "0"
+        local args1 = {tick(), randomKey, tool, "FDS9I83", modifiedStartPos, {hitDirection}, true}
+        local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
+        
+        GNX_S:FireServer(unpack(args1))
+        ZFKLF__H:FireServer(unpack(args2))
+        
+	else
+        local randomKey = RandomString(30) .. "0"
+        local args1 = {tick(), randomKey, tool, "FDS9I83", Camera.CFrame.Position, {hitDirection}, false}
+        local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
+        
+        GNX_S:FireServer(unpack(args1))
+        ZFKLF__H:FireServer(unpack(args2))
     end
-    local randomKey = RandomString(30) .. "0"
-    local args1 = {tick(), randomKey, tool, "FDS9I83", shootOrigin, {hitDirection}, false}
-    local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
-    GNX_S:FireServer(unpack(args1))
-    ZFKLF__H:FireServer(unpack(args2))
+    
     ammo.Value = math.max(ammo.Value - 1, 0)
     hitMarker:Fire(head)
     storedAmmo.Value = storedAmmo.Value
-    createTracer(shootOrigin, hitPosition)
+    
+    createTracer(Camera.CFrame.Position, hitPosition)
     playHitSound()
+    
     local player = Players:GetPlayerFromCharacter(head.Parent)
     if player then
         showHitNotify(player.Name, 1, head)
