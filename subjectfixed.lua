@@ -132,7 +132,13 @@ RageLeft:AddSlider('PredictionAmount', {
         getgenv().PredictionAmount = Value
     end
 })
-
+RageLeft:AddToggle('Wallbang', {
+    Text = 'Wallbang',
+    Default = false,
+    Callback = function(Value)
+        getgenv().Wallbang = Value
+    end
+})
 RageLeft:AddToggle('VisibilityCheck', {
     Text = 'Visibility Check',
     Default = true,
@@ -533,41 +539,48 @@ function createTracer(startPos, endPos)
     return tracerModel
 end
 
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
 function shoot(head)
     local tool = getCurrentTool()
     if not tool then return end
-    
     local values = tool:FindFirstChild("Values")
     local hitMarker = tool:FindFirstChild("Hitmarker")
     if not values or not hitMarker then return end
-    
     local ammo = values:FindFirstChild("SERVER_Ammo")
     local storedAmmo = values:FindFirstChild("SERVER_StoredAmmo")
     if not ammo or not storedAmmo or ammo.Value <= 0 then return end
-    
     local hitPosition = head.Position
-    local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
-    
+    local shootOrigin = Camera.CFrame.Position
+    local hitDirection = (hitPosition - shootOrigin).Unit
     if getgenv().Prediction then
         local velocity = head.Velocity or Vector3.zero
         hitPosition = hitPosition + velocity * getgenv().PredictionAmount
-        hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+        hitDirection = (hitPosition - shootOrigin).Unit
     end
-    
+    local params = RaycastParams.new()
+    params.FilterDescendantsInstances = {LocalPlayer.Character}
+    params.FilterType = Enum.RaycastFilterType.Blacklist
+    local rayResult = workspace:Raycast(shootOrigin, (hitPosition - shootOrigin), params)
+    if getgenv().Wallbang and rayResult and rayResult.Instance and not rayResult.Instance:IsDescendantOf(head.Parent) then
+        local c = getClosest()
+        if c then
+            shootOrigin = c.Position + Vector3.new(0,2,0)
+            hitDirection = (hitPosition - shootOrigin).Unit
+        end
+    end
     local randomKey = RandomString(30) .. "0"
-    local args1 = {tick(), randomKey, tool, "FDS9I83", Camera.CFrame.Position, {hitDirection}, false}
+    local args1 = {tick(), randomKey, tool, "FDS9I83", shootOrigin, {hitDirection}, false}
     local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
-    
     GNX_S:FireServer(unpack(args1))
     ZFKLF__H:FireServer(unpack(args2))
-    
     ammo.Value = math.max(ammo.Value - 1, 0)
     hitMarker:Fire(head)
     storedAmmo.Value = storedAmmo.Value
-    
-    createTracer(Camera.CFrame.Position, hitPosition)
+    createTracer(shootOrigin, hitPosition)
     playHitSound()
-    
     local player = Players:GetPlayerFromCharacter(head.Parent)
     if player then
         showHitNotify(player.Name, 1, head)
