@@ -92,6 +92,8 @@ getgenv().TracerWidth = 0.3
 getgenv().TracerLifetime = 0.3
 getgenv().VisibilityCheck = true
 getgenv().LastShot = 0
+getgenv().RandomTracer = false
+getgenv().RandomTracerOffset = 5
 
 RageLeft:AddToggle('RageEnabled', {
     Text = 'Enable Ragebot',
@@ -456,7 +458,10 @@ function createTracer(startPos, endPos)
 
     local offset = getgenv().TracerOffset or Vector3.zero
     startPos = startPos + offset
-
+    if getgenv().RandomTracer then
+        visualStartPos = getRandomOffsetPosition(startPos)
+        visualEndPos = getRandomOffsetPosition(endPos)
+	end
     local tracerModel = Instance.new("Model")
     tracerModel.Name = "TracerBeam"
 
@@ -1093,24 +1098,33 @@ PlayerLeft:AddToggle('NoFallDamage', {
             playerFunctions.nofalldmg()
             Library:Notify("No Fall Damage enabled!", 3)
         end
-    end
+		end
 })
 
-PlayerLeft:AddToggle('InstantLockpick', {
-    Text = 'Instant Lockpick',
+RageLeft:AddToggle('RandomTracer', {
+    Text = 'Random Bullet',
     Default = false,
     Callback = function(Value)
-        getgenv().InstantLockpick = Value
-        if Value then
-            Library:Notify("Instant Lockpick enabled!", 3)
-        end
+        getgenv().RandomTracer = Value
     end
 })
 
-if getgenv().InstantLockpick then
-    game.Players.LocalPlayer.PlayerGui.ChildAdded:Connect(function(child)
-        if child.Name == "LockpickGUI" and playerFunctions then
-            playerFunctions.instantlockpick()
-        end
-    end)
+RageLeft:AddSlider('RandomTracerOffset', {
+    Text = 'Random Tracer Offset',
+    Default = 5,
+    Min = 1,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().RandomTracerOffset = Value
+    end
+})
+
+function getRandomOffsetPosition(position)
+    local offset = Vector3.new(
+        math.random(-getgenv().RandomTracerOffset, getgenv().RandomTracerOffset),
+        math.random(-getgenv().RandomTracerOffset, getgenv().RandomTracerOffset),
+        math.random(-getgenv().RandomTracerOffset, getgenv().RandomTracerOffset)
+    )
+    return position + offset
 end
