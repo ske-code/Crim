@@ -3,7 +3,54 @@ local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
+local plr = Players.LocalPlayer
+local clonef = clonefunction
+local format = clonef(string.format)
+local gsub = clonef(string.gsub)
+local match = clonef(string.match)
+local append = clonef(appendfile)
+local type = clonef(type)
+local crunning = clonef(coroutine.running)
+local cwrap = clonef(coroutine.wrap)
+local cresume = clonef(coroutine.resume)
+local cyield = clonef(coroutine.yield)
+local pcall = clonef(pcall)
+local pairs = clonef(pairs)
+local Error = clonef(error)
+local getnamecallmethod = clonef(getnamecallmethod)
+local warn = clonef(warn)
+local print = clonef(print)
+local getupvalues = clonef(debug.getupvalues)
+local getconstants = clonef(debug.getconstants)
+local getprotos = clonef(debug.getprotos)
+repeat
+	task.wait()
+until game:IsLoaded()
+do
+	local function isAdonisAC(table)
+		return rawget(table, "Detected")
+			and typeof(rawget(table, "Detected")) == "function"
+			and rawget(table, "RLocked")
+	end
 
+	for _, v in next, getgc(true) do
+		if typeof(v) == "table" and isAdonisAC(v) then
+			for i, v in next, v do
+				if rawequal(i, "Detected") then
+					local old
+					old = hookfunction(v, function(action, info, crash)
+						if rawequal(action, "_") and rawequal(info, "_") and rawequal(crash, false) then
+							return old(action, info, crash)
+						end
+						return task.wait(9e9)
+					end)
+					warn("bypassed")
+					break
+				end
+			end
+		end
+	end
+end
 local GNX_S = ReplicatedStorage:WaitForChild("Events"):WaitForChild("GNX_S")
 local ZFKLF__H = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ZFKLF__H")
 
@@ -916,3 +963,154 @@ LocalPlayer.CharacterAdded:Connect(function()
         updateESP()
     end
 end)
+local PlayerTab = Window:AddTab('Player')
+local PlayerLeft = PlayerTab:AddLeftGroupbox('Player Functions')
+
+getgenv().InfiniteStamina = false
+getgenv().NoFallDamage = false
+getgenv().InstantLockpick = false
+
+local function findModule()
+    for i, v in pairs(game:GetService("StarterPlayer").StarterPlayerScripts:GetDescendants()) do
+        if v:IsA("ModuleScript") and v.Name == "XIIX" then
+            return v
+        end
+    end
+end
+
+local function setupFunctions()
+    local moduleScript = findModule()
+    if not moduleScript then 
+        Library:Notify("XIIX module not found!", 5)
+        return nil
+    end
+    
+    local success, module = pcall(require, moduleScript)
+    if not success then
+        Library:Notify("Failed to require XIIX module!", 5)
+        return nil
+    end
+    
+    local ac = module["XIIX"]
+    if not ac then
+        Library:Notify("XIIX function not found!", 5)
+        return nil
+    end
+    
+    local glob = getfenv(ac)["_G"]
+    if not glob then
+        Library:Notify("Global table not found!", 5)
+        return nil
+    end
+    
+    local S_Check = glob["S_Check"]
+    if not S_Check then
+        Library:Notify("S_Check function not found!", 5)
+        return nil
+    end
+    
+    local upvals = getupvalues(S_Check)
+    if #upvals < 2 then
+        Library:Notify("Not enough upvalues in S_Check!", 5)
+        return nil
+    end
+    
+    local secondUpval = upvals[2]
+    local secondUpvalUpvals = getupvalues(secondUpval)
+    if #secondUpvalUpvals < 1 then
+        Library:Notify("Not enough upvalues in second function!", 5)
+        return nil
+    end
+    
+    local stamina = secondUpvalUpvals[1]
+    
+    local function infstamina()
+        if stamina ~= nil then
+            hookfunction(stamina, function()
+                return 100, 100
+            end)
+        end
+    end
+    
+    local function nofalldmg()
+        local old
+        old = hookmetamethod(game, "__namecall", function(self, ...)
+            local args = { ... }
+            if getnamecallmethod() == "FireServer" and not checkcaller() and args[1] == "FlllD" and args[4] == false then
+                args[2] = 0
+                args[3] = 0
+            end
+            return old(self, unpack(args))
+        end)
+    end
+    
+    local function lockpick()
+        for i, v in getgc() do
+            if type(v) == "function" and debug.info(v, "n") == "Complete" then
+                return v
+            end
+        end
+    end
+    
+    local function instantlockpick()
+        local plr = game.Players.LocalPlayer
+        if plr.PlayerGui:FindFirstChild("LockpickGUI") then
+            task.wait(0.15)
+            local compl = lockpick()
+            if compl then
+                compl()
+            end
+        end
+    end
+    
+    return {
+        infstamina = infstamina,
+        nofalldmg = nofalldmg,
+        instantlockpick = instantlockpick
+    }
+end
+
+local playerFunctions = setupFunctions()
+
+PlayerLeft:AddToggle('InfiniteStamina', {
+    Text = 'Infinite Stamina',
+    Default = false,
+    Callback = function(Value)
+        getgenv().InfiniteStamina = Value
+        if Value and playerFunctions then
+            playerFunctions.infstamina()
+            Library:Notify("Infinite Stamina enabled!", 3)
+        end
+    end
+})
+
+PlayerLeft:AddToggle('NoFallDamage', {
+    Text = 'No Fall Damage',
+    Default = false,
+    Callback = function(Value)
+        getgenv().NoFallDamage = Value
+        if Value and playerFunctions then
+            playerFunctions.nofalldmg()
+            Library:Notify("No Fall Damage enabled!", 3)
+        end
+    end
+})
+
+PlayerLeft:AddToggle('InstantLockpick', {
+    Text = 'Instant Lockpick',
+    Default = false,
+    Callback = function(Value)
+        getgenv().InstantLockpick = Value
+        if Value then
+            Library:Notify("Instant Lockpick enabled!", 3)
+        end
+    end
+})
+
+if getgenv().InstantLockpick then
+    game.Players.LocalPlayer.PlayerGui.ChildAdded:Connect(function(child)
+        if child.Name == "LockpickGUI" and playerFunctions then
+            playerFunctions.instantlockpick()
+        end
+    end)
+end
