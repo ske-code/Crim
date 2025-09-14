@@ -1237,17 +1237,16 @@ RunService.RenderStepped:Connect(function()
 
     local char = LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    if not root or not humanoid then return end
 
-    local move = LocalPlayer:GetMoveVector()
-    if move.Magnitude == 0 then return end
+    local moveDirection = humanoid.MoveDirection
+    if moveDirection.Magnitude == 0 then return end
 
     local cam = workspace.CurrentCamera
     local forward = cam.CFrame.LookVector
     local right = cam.CFrame.RightVector
-    local up = Vector3.new(0, move.Y, 0)
 
-    local direction = (forward * move.Z + right * move.X + up).Unit
-    local offset = direction * getgenv().FlySpeed * RunService.RenderStepped:Wait()
-    root.CFrame = root.CFrame + offset
+    local direction = (forward * moveDirection.Z + right * moveDirection.X + Vector3.new(0, moveDirection.Y, 0)).Unit
+    root.CFrame = root.CFrame + direction * getgenv().FlySpeed * RunService.RenderStepped:Wait()
 end)
