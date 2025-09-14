@@ -1207,48 +1207,43 @@ PlayerLeft:AddToggle('NoFallDamage', {
         end
 	end
 })
-PlayerLeft:AddToggle('FlyEnabled', {
-    Text = 'Fly Mode(test)',
+RageLeft:AddToggle('AntiLockEnabled', {
+    Text = 'Anti-Lock',
     Default = false,
     Callback = function(state)
-        getgenv().FlyEnabled = state
+        getgenv().AntiLockEnabled = state
     end
 })
 
-PlayerLeft:AddSlider('FlySpeed', {
-    Text = 'Fly Speed',
-    Default = 50,
-    Min = 10,
-    Max = 200,
-    Rounding = 0,
+RageLeft:AddSlider('AntiLockSpeed', {
+    Text = 'Anti-Lock Intensity',
+    Default = 0.5,
+    Min = 0.1,
+    Max = 5,
+    Rounding = 1,
     Callback = function(value)
-        getgenv().FlySpeed = value
+        getgenv().AntiLockSpeed = value
     end
 })
-getgenv().FlyEnabled = false
-getgenv().FlySpeed = 50
+getgenv().AntiLockEnabled = false
+getgenv().AntiLockSpeed = 0.5
 
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 RunService.RenderStepped:Connect(function()
-    if not getgenv().FlyEnabled then return end
+    if not getgenv().AntiLockEnabled then return end
 
     local char = LocalPlayer.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
-    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-    if not root or not humanoid then return end
+    if not root then return end
 
-    local move = humanoid.MoveDirection
-    if move.Magnitude == 0 then return end
+    local offset = Vector3.new(
+        math.random(-100, 100) / 100 * getgenv().AntiLockSpeed,
+        math.random(-100, 100) / 100 * getgenv().AntiLockSpeed,
+        math.random(-100, 100) / 100 * getgenv().AntiLockSpeed
+    )
 
-    local cam = workspace.CurrentCamera
-    local moveDir = Vector3.new(
-        cam.CFrame:VectorToWorldSpace(Vector3.new(move.X, 0, move.Z)).X,
-        move.Y,
-        cam.CFrame:VectorToWorldSpace(Vector3.new(move.X, 0, move.Z)).Z
-    ).Unit
-
-    root.CFrame = root.CFrame + moveDir * getgenv().FlySpeed * RunService.RenderStepped:Wait()
+    root.CFrame = root.CFrame + offset
 end)
