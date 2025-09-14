@@ -107,7 +107,7 @@ RageLeft:AddSlider('FireRate', {
     Text = 'FireRate',
     Default = 5,
     Min = 1,
-    Max = 450,
+    Max = 1000,
     Rounding = 0,
     Callback = function(Value)
         getgenv().FireRate = Value
@@ -646,7 +646,7 @@ end
 task.spawn(function()
     while true do
         local waitTime = 1 / getgenv().FireRate
-        task.wait(waitTime)
+        wait(waitTime)
         
         if getgenv().RageEnabled and tick() - getgenv().LastShot >= waitTime then
             local target = getClosest()
@@ -874,7 +874,7 @@ function updateESP()
                     local position, onScreen = camera:WorldToViewportPoint(humanoidRootPart.Position)
                     
                     if onScreen then
-                        -- Arrows
+                        
                         if getgenv().ArrowsEnabled then
                             if not arrows[player] then
                                 createArrow(player)
@@ -886,7 +886,7 @@ function updateESP()
                             end
                         end
 
-                        -- Highlight
+                        
                         if getgenv().HighlightEnabled then
                             if not highlights[player] then
                                 createHighlight(player)
@@ -900,7 +900,7 @@ function updateESP()
                             end
                         end
 
-                        -- Health Bar
+                        
                         if getgenv().HealthBarEnabled then
                             if not healthBars[player] then
                                 createHealthBar(player)
@@ -912,7 +912,7 @@ function updateESP()
                             end
                         end
 
-                        -- Name Tags
+                        
                         if getgenv().NameTagsEnabled then
                             if not nameTags[player] then
                                 createNameTag(player)
