@@ -1208,6 +1208,7 @@ PlayerLeft:AddToggle('NoFallDamage', {
 	end
 })
 RageLeft:AddToggle('AntiLockEnabled', {
+RageLeft:AddToggle('AntiLockEnabled', {
     Text = 'Anti-Lock',
     Default = false,
     Callback = function(state)
@@ -1215,21 +1216,21 @@ RageLeft:AddToggle('AntiLockEnabled', {
     end
 })
 
-RageLeft:AddSlider('AntiLockSpeed', {
-    Text = 'Anti-Lock Intensity',
-    Default = 0.5,
+RageLeft:AddSlider('AntiLockPower', {
+    Text = 'Anti-Lock Power',
+    Default = 1,
     Min = 0.1,
     Max = 5,
     Rounding = 1,
     Callback = function(value)
-        getgenv().AntiLockSpeed = value
+        getgenv().AntiLockPower = value
     end
 })
 getgenv().AntiLockEnabled = false
-getgenv().AntiLockSpeed = 0.5
+getgenv().AntiLockPower = 1
 
-local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 RunService.RenderStepped:Connect(function()
@@ -1240,10 +1241,10 @@ RunService.RenderStepped:Connect(function()
     if not root then return end
 
     local offset = Vector3.new(
-        math.random(-100, 100) / 100 * getgenv().AntiLockSpeed,
-        math.random(-100, 100) / 100 * getgenv().AntiLockSpeed,
-        math.random(-100, 100) / 100 * getgenv().AntiLockSpeed
+        math.random(-100, 100) / 100 * getgenv().AntiLockPower,
+        math.random(-100, 100) / 100 * getgenv().AntiLockPower,
+        math.random(-100, 100) / 100 * getgenv().AntiLockPower
     )
 
-    root.CFrame = root.CFrame + offset
+    root.Position += offset
 end)
