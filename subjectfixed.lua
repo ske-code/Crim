@@ -1207,7 +1207,7 @@ PlayerLeft:AddToggle('NoFallDamage', {
         end
 	end
 })
-RageLeft:AddToggle('AntiLockEnabled', {
+
 RageLeft:AddToggle('AntiLockEnabled', {
     Text = 'Anti-Lock',
     Default = false,
