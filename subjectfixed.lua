@@ -1208,43 +1208,51 @@ PlayerLeft:AddToggle('NoFallDamage', {
 	end
 })
 
-RageLeft:AddToggle('AntiLockEnabled', {
-    Text = 'Anti-Lock',
+local FunLeft = PlayerTab:AddLeftGroupbox('Fun Features')
+
+getgenv().SpinHead = false
+getgenv().SpinSpeed = 5
+
+FunLeft:AddToggle('SpinHead', {
+    Text = 'Spin Head',
     Default = false,
-    Callback = function(state)
-        getgenv().AntiLockEnabled = state
+    Callback = function(Value)
+        getgenv().SpinHead = Value
+        if Value then
+            startHeadSpin()
+        end
     end
 })
 
-RageLeft:AddSlider('AntiLockPower', {
-    Text = 'Anti-Lock Power',
-    Default = 1,
-    Min = 0.1,
-    Max = 5,
-    Rounding = 1,
-    Callback = function(value)
-        getgenv().AntiLockPower = value
+FunLeft:AddSlider('SpinSpeed', {
+    Text = 'Spin Speed',
+    Default = 5,
+    Min = 1,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().SpinSpeed = Value
     end
 })
-getgenv().AntiLockEnabled = false
-getgenv().AntiLockPower = 1
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-
-RunService.RenderStepped:Connect(function()
-    if not getgenv().AntiLockEnabled then return end
-
-    local char = LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-
-    local offset = Vector3.new(
-        math.random(-100, 100) / 100 * getgenv().AntiLockPower,
-        math.random(-100, 100) / 100 * getgenv().AntiLockPower,
-        math.random(-100, 100) / 100 * getgenv().AntiLockPower
-    )
-
-    root.Position += offset
-end)
+function startHeadSpin()
+    spawn(function()
+        while getgenv().SpinHead do
+            wait(0.1)
+            
+            if LocalPlayer.Character then
+                local head = LocalPlayer.Character:FindFirstChild("Head")
+                if head then
+                    local randomAngle = CFrame.Angles(
+                        math.rad(math.random(0, 360)),
+                        math.rad(math.random(0, 360)), 
+                        math.rad(math.random(0, 360))
+                    )
+                    
+                    
+                    head.CFrame = head.CFrame * randomAngle * CFrame.Angles(0, math.rad(getgenv().SpinSpeed), 0)
+                end
+            end
+        end
+    end)
+end
