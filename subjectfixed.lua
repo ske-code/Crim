@@ -1240,13 +1240,15 @@ RunService.RenderStepped:Connect(function()
     local humanoid = char and char:FindFirstChildOfClass("Humanoid")
     if not root or not humanoid then return end
 
-    local moveDirection = humanoid.MoveDirection
-    if moveDirection.Magnitude == 0 then return end
+    local move = humanoid.MoveDirection
+    if move.Magnitude == 0 then return end
 
     local cam = workspace.CurrentCamera
-    local forward = cam.CFrame.LookVector
-    local right = cam.CFrame.RightVector
+    local moveDir = Vector3.new(
+        cam.CFrame:VectorToWorldSpace(Vector3.new(move.X, 0, move.Z)).X,
+        move.Y,
+        cam.CFrame:VectorToWorldSpace(Vector3.new(move.X, 0, move.Z)).Z
+    ).Unit
 
-    local direction = (forward * moveDirection.Z + right * moveDirection.X + Vector3.new(0, moveDirection.Y, 0)).Unit
-    root.CFrame = root.CFrame + direction * getgenv().FlySpeed * RunService.RenderStepped:Wait()
+    root.CFrame = root.CFrame + moveDir * getgenv().FlySpeed * RunService.RenderStepped:Wait()
 end)
