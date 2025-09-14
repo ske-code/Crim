@@ -184,7 +184,7 @@ LogsRight:AddSlider('HitNotifyDuration', {
     Rounding = 0,
     Callback = function(Value)
         getgenv().HitNotifyDuration = Value
-    end
+		end
 })
 
 LogsRight:AddToggle('HitNotifyColorToggle', {
@@ -1207,4 +1207,47 @@ PlayerLeft:AddToggle('NoFallDamage', {
         end
 	end
 })
+PlayerLeft:AddToggle('FlyEnabled', {
+    Text = 'Fly Mode(test)',
+    Default = false,
+    Callback = function(state)
+        getgenv().FlyEnabled = state
+    end
+})
 
+PlayerLeft:AddSlider('FlySpeed', {
+    Text = 'Fly Speed',
+    Default = 50,
+    Min = 10,
+    Max = 200,
+    Rounding = 0,
+    Callback = function(value)
+        getgenv().FlySpeed = value
+    end
+})
+getgenv().FlyEnabled = false
+getgenv().FlySpeed = 50
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+RunService.RenderStepped:Connect(function()
+    if not getgenv().FlyEnabled then return end
+
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local move = LocalPlayer:GetMoveVector()
+    if move.Magnitude == 0 then return end
+
+    local cam = workspace.CurrentCamera
+    local forward = cam.CFrame.LookVector
+    local right = cam.CFrame.RightVector
+    local up = Vector3.new(0, move.Y, 0)
+
+    local direction = (forward * move.Z + right * move.X + up).Unit
+    local offset = direction * getgenv().FlySpeed * RunService.RenderStepped:Wait()
+    root.CFrame = root.CFrame + offset
+end)
