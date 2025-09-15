@@ -1187,7 +1187,93 @@ function startHeadSpin()
                     
                     head.CFrame = head.CFrame * randomAngle * CFrame.Angles(0, math.rad(getgenv().SpinSpeed), 0)
                 end
-            end
+				end
         end
     end)
 end
+getgenv().auto_reloadF = false
+local autoReloadRunning = false
+
+autoReloadL = function()
+    if autoReloadRunning then return end
+    autoReloadRunning = true
+
+    local RS = game:GetService("ReplicatedStorage")
+    local PLR = game:GetService("Players").LocalPlayer
+    local remote = RS:FindFirstChild("Events"):FindFirstChild("GNX_R")
+    local KEY = "KLWE89U0"
+
+    local activeConnections = {}
+    local toolListener, charListener
+
+    local disconnectAll = function()
+        for _, conn in ipairs(activeConnections) do
+            if conn.Connected then conn:Disconnect() end
+        end
+        activeConnections = {}
+
+        if toolListener and toolListener.Connected then toolListener:Disconnect() end
+        if charListener and charListener.Connected then charListener:Disconnect() end
+    end
+
+    local monitorTool = function(tool)
+        if not tool or not tool:FindFirstChild("IsGun") then return end
+        local values = tool:FindFirstChild("Values")
+        if not values then return end
+
+        local ammo = values:FindFirstChild("SERVER_Ammo")
+        local reserve = values:FindFirstChild("SERVER_StoredAmmo")
+
+        if reserve then
+            table.insert(activeConnections, reserve:GetPropertyChangedSignal("Value"):Connect(function()
+                if getgenv().auto_reloadF and reserve.Value > 0 then
+                    remote:FireServer(tick(), KEY, tool)
+                end
+            end))
+
+            if reserve.Value > 0 and getgenv().auto_reloadF then
+                remote:FireServer(tick(), KEY, tool)
+            end
+        end
+
+        if ammo and reserve then
+            table.insert(activeConnections, ammo:GetPropertyChangedSignal("Value"):Connect(function()
+                if getgenv().auto_reloadF and reserve.Value > 0 then
+                    remote:FireServer(tick(), KEY, tool)
+                end
+            end))
+        end
+    end
+
+    local monitorCharacter = function(char)
+        disconnectAll()
+        monitorTool(char:FindFirstChildOfClass("Tool"))
+
+        toolListener = char.ChildAdded:Connect(function(obj)
+            if obj:IsA("Tool") and obj:FindFirstChild("IsGun") then
+                monitorTool(obj)
+            end
+        end)
+    end
+
+    if PLR.Character then monitorCharacter(PLR.Character) end
+
+    charListener = PLR.CharacterAdded:Connect(function(char)
+        monitorCharacter(char)
+    end)
+
+    while getgenv().auto_reloadF do task.wait(0.1) end
+
+    disconnectAll()
+    autoReloadRunning = false
+end
+RageLeft:AddToggle('auto_reloadF', {
+    Text = 'Auto Reload',
+    Default = false,
+    Callback = function(state)
+        getgenv().auto_reloadF = state
+        if state then
+            task.spawn(autoReloadL)
+        end
+    end
+})
