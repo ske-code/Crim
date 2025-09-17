@@ -193,22 +193,97 @@ LogsRight:AddToggle('HitNotifyColorToggle', {
     Callback = function(Value) end
 })
 
-function showHitNotify(targetName, damage, hitPart)
+function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
     if not getgenv().HitNotifyEnabled then return end
-    
-    local partName = "Body"
+
+    local partName = "BODY"
+    local isHeadshot = false
+    local isFatal = false
+
     if hitPart then
-        if hitPart.Name == "Head" then
+        local name = hitPart.Name
+        if name == "Head" then
             partName = "HEAD"
-        elseif hitPart.Name == "Torso" then
+            isHeadshot = true
+        elseif name:find("Torso") then
             partName = "BODY"
-        elseif hitPart.Name:find("Arm") or hitPart.Name:find("Leg") then
+        elseif name:find("Arm") or name:find("Leg") then
             partName = "LIMB"
+        else
+            partName = name:upper()
         end
     end
-    
-    local message = string.format("Hit %s [%s] for %d damage", targetName, partName, damage)
+
+    local distance = (Camera.CFrame.Position - hitPosition).Magnitude
+    local health = targetHumanoid and math.floor(targetHumanoid.Health) or "?"
+    local weaponName = tool and tool.Name or "Unknown"
+    local timestamp = os.date("%H:%M:%S")
+
+    if targetHumanoid and targetHumanoid.Health <= 0 then
+        isFatal = true
+    end
+
+    local message = string.format(
+        "[%s] Hit %s [%s] | Damage: %d | HP: %s | Distance: %.1f | Weapon: %s%s%s",
+        timestamp,
+        targetName,
+        partName,
+        damage,
+        tostring(health),
+        distance,
+        weaponName,
+        isHeadshot and " | Headshot" or "",
+        isFatal and " | Fatal" or ""
+    )
+
     Library:Notify(message, getgenv().HitNotifyDuration)
+end
+function shoot(head)
+    local tool = getCurrentTool()
+    if not tool then return end
+    
+    local values = tool:FindFirstChild("Values")
+    local hitMarker = tool:FindFirstChild("Hitmarker")
+    if not values or not hitMarker then return end
+    
+    local ammo = values:FindFirstChild("SERVER_Ammo")
+    local storedAmmo = values:FindFirstChild("SERVER_StoredAmmo")
+    if not ammo or not storedAmmo then return end
+    
+    
+    if not getgenv().InfAmmo and ammo.Value <= 0 then return end
+    
+    local hitPosition = head.Position
+    local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+    
+    if getgenv().Prediction then
+        local velocity = head.Velocity or Vector3.zero
+        hitPosition = hitPosition + velocity * getgenv().PredictionAmount
+        hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+    end
+    
+    local shootPosition = Camera.CFrame.Position
+    
+    
+    local randomKey = RandomString(30) .. "0"
+    local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, getgenv().Wallbang}
+    local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
+    
+    GNX_S:FireServer(unpack(args1))
+    ZFKLF__H:FireServer(unpack(args2))
+    
+    ammo.Value = math.max(ammo.Value - 1, 0)
+    hitMarker:Fire(head)
+    storedAmmo.Value = storedAmmo.Value
+    
+    createTracer(shootPosition, hitPosition)
+    playHitSound()
+    
+    local player = Players:GetPlayerFromCharacter(head.Parent)
+    if player then
+        local humanoid = head.Parent:FindFirstChildOfClass("Humanoid")
+        showHitNotify(player.Name, 1, head, humanoid, hitPosition, tool)
+	end
 end
 function RandomString(length)
     local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -531,52 +606,7 @@ function createTracer(startPos, endPos)
 
     return tracerModel
 end
-function shoot(head)
-    local tool = getCurrentTool()
-    if not tool then return end
-    
-    local values = tool:FindFirstChild("Values")
-    local hitMarker = tool:FindFirstChild("Hitmarker")
-    if not values or not hitMarker then return end
-    
-    local ammo = values:FindFirstChild("SERVER_Ammo")
-    local storedAmmo = values:FindFirstChild("SERVER_StoredAmmo")
-    if not ammo or not storedAmmo then return end
-    
-    
-    if not getgenv().InfAmmo and ammo.Value <= 0 then return end
-    
-    local hitPosition = head.Position
-    local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
-    
-    if getgenv().Prediction then
-        local velocity = head.Velocity or Vector3.zero
-        hitPosition = hitPosition + velocity * getgenv().PredictionAmount
-        hitDirection = (hitPosition - Camera.CFrame.Position).Unit
-    end
-    
-    local shootPosition = Camera.CFrame.Position
-    
-    
-    local randomKey = RandomString(30) .. "0"
-    local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, getgenv().Wallbang}
-    local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
-    
-    GNX_S:FireServer(unpack(args1))
-    ZFKLF__H:FireServer(unpack(args2))
-    
-    ammo.Value = math.max(ammo.Value - 1, 0)
-    hitMarker:Fire(head)
-    storedAmmo.Value = storedAmmo.Value
-    
-    createTracer(shootPosition, hitPosition)
-    playHitSound()
-    
-    local player = Players:GetPlayerFromCharacter(head.Parent)
-    if player then
-        showHitNotify(player.Name, 1, head)
-    end
-end
+
 
 task.spawn(function()
     while true do
