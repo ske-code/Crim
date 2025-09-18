@@ -196,9 +196,9 @@ local logGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("
 logGui.ResetOnSpawn = false
 logGui.Name = "PixelHitLogs"
 
-local pixelSize = 3
-local mainColor = Color3.fromRGB(255, 255, 255) -- 其余白色
-local highlightColor = Color3.fromRGB(255, 182, 193) -- 淡粉色
+local pixelSize = 2
+local mainColor = Color3.fromRGB(255, 255, 255) 
+local highlightColor = Color3.fromRGB(255, 182, 193)
 
 local spacing = 1
 local logSpacing = 5
@@ -303,7 +303,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
 
     local box = Instance.new("Frame", logGui)
     box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    box.BackgroundTransparency = 0.3
+    box.BackgroundTransparency = 0.6
     box.BorderSizePixel = 0
     local offsetX = 4
     local content = {}
