@@ -203,7 +203,7 @@ local highlightColor = Color3.fromRGB(255, 182, 193)
 local spacing = 1
 local logSpacing = 5
 local activeLogs = {}
-local maxLogs = 5
+local maxLogs = 50
 
 
 local textCache = {}
