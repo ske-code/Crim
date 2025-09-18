@@ -192,156 +192,158 @@ LogsRight:AddToggle('HitNotifyColorToggle', {
     Default = false,
     Callback = function(Value) end
 })
-
-function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
 local logGui = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
 logGui.ResetOnSpawn = false
 logGui.Name = "PixelHitLogs"
 
 local pixelSize = 3
-local mainColor = Color3.fromRGB(255,182,193)
-local nameColor = Color3.fromRGB(255,105,180)
-local hpColor = Color3.fromRGB(144,238,144)
-local headshotColor = Color3.fromRGB(255,69,0)
-local fatalColor = Color3.fromRGB(255,0,0)
+local mainColor = Color3.fromRGB(255, 255, 255) -- 其余白色
+local highlightColor = Color3.fromRGB(255, 182, 193) -- 淡粉色
 
 local spacing = 1
 local logSpacing = 5
 local activeLogs = {}
 
 local glyphs = {
-A={"01110","10001","10001","11111","10001","10001","10001"},
-B={"11110","10001","11110","10001","10001","10001","11110"},
-C={"01110","10001","10000","10000","10000","10001","01110"},
-D={"11110","10001","10001","10001","10001","10001","11110"},
-E={"11111","10000","11110","10000","10000","10000","11111"},
-F={"11111","10000","11110","10000","10000","10000","10000"},
-G={"01110","10001","10000","10111","10001","10001","01110"},
-H={"10001","10001","11111","10001","10001","10001","10001"},
-I={"111","010","010","010","010","010","111"},
-J={"00111","00010","00010","00010","00010","10010","01100"},
-K={"10001","10010","10100","11000","10100","10010","10001"},
-L={"10000","10000","10000","10000","10000","10000","11111"},
-M={"10001","11011","10101","10101","10001","10001","10001"},
-N={"10001","10001","11001","10101","10011","10001","10001"},
-O={"01110","10001","10001","10001","10001","10001","01110"},
-P={"11110","10001","10001","11110","10000","10000","10000"},
-Q={"01110","10001","10001","10001","10101","10010","01101"},
-R={"11110","10001","10001","11110","10100","10010","10001"},
-S={"01111","10000","10000","01110","00001","00001","11110"},
-T={"11111","00100","00100","00100","00100","00100","00100"},
-U={"10001","10001","10001","10001","10001","10001","01110"},
-V={"10001","10001","10001","10001","10001","01010","00100"},
-W={"10001","10001","10001","10101","10101","11011","10001"},
-X={"10001","10001","01010","00100","01010","10001","10001"},
-Y={"10001","10001","01010","00100","00100","00100","00100"},
-Z={"11111","00001","00010","00100","01000","10000","11111"},
-["0"]={"01110","10001","10011","10101","11001","10001","01110"},
-["1"]={"010","110","010","010","010","010","111"},
-["2"]={"01110","10001","00001","00010","00100","01000","11111"},
-["3"]={"11110","00001","00001","01110","00001","00001","11110"},
-["4"]={"10001","10001","10001","11111","00001","00001","00001"},
-["5"]={"11111","10000","11110","00001","00001","00001","11110"},
-["6"]={"01110","10000","11110","10001","10001","10001","01110"},
-["7"]={"11111","00001","00010","00100","01000","01000","01000"},
-["8"]={"01110","10001","10001","01110","10001","10001","01110"},
-["9"]={"01110","10001","10001","01111","00001","00001","01110"},
-[" "]={"00000","00000","00000","00000","00000","00000","00000"},
-["!"]={"1","1","1","1","1","0","1"},
-["?"]={"01110","10001","00001","00010","00100","00000","00100"},
-[":"]={"0","1","0","0","1","0","0"},
-["-"]={"00000","00000","11111","00000","00000","00000","00000"}
+    A={"01110","10001","10001","11111","10001","10001","10001"},
+    B={"11110","10001","11110","10001","10001","10001","11110"},
+    C={"01110","10001","10000","10000","10000","10001","01110"},
+    D={"11110","10001","10001","10001","10001","10001","11110"},
+    E={"11111","10000","11110","10000","10000","10000","11111"},
+    F={"11111","10000","11110","10000","10000","10000","10000"},
+    G={"01110","10001","10000","10111","10001","10001","01110"},
+    H={"10001","10001","11111","10001","10001","10001","10001"},
+    I={"111","010","010","010","010","010","111"},
+    J={"00111","00010","00010","00010","00010","10010","01100"},
+    K={"10001","10010","10100","11000","10100","10010","10001"},
+    L={"10000","10000","10000","10000","10000","10000","11111"},
+    M={"10001","11011","10101","10101","10001","10001","10001"},
+    N={"10001","10001","11001","10101","10011","10001","10001"},
+    O={"01110","10001","10001","10001","10001","10001","01110"},
+    P={"11110","10001","10001","11110","10000","10000","10000"},
+    Q={"01110","10001","10001","10001","10101","10010","01101"},
+    R={"11110","10001","10001","11110","10100","10010","10001"},
+    S={"01111","10000","10000","01110","00001","00001","11110"},
+    T={"11111","00100","00100","00100","00100","00100","00100"},
+    U={"10001","10001","10001","10001","10001","10001","01110"},
+    V={"10001","10001","10001","10001","10001","01010","00100"},
+    W={"10001","10001","10001","10101","10101","11011","10001"},
+    X={"10001","10001","01010","00100","01010","10001","10001"},
+    Y={"10001","10001","01010","00100","00100","00100","00100"},
+    Z={"11111","00001","00010","00100","01000","10000","11111"},
+    ["0"]={"01110","10001","10011","10101","11001","10001","01110"},
+    ["1"]={"010","110","010","010","010","010","111"},
+    ["2"]={"01110","10001","00001","00010","00100","01000","11111"},
+    ["3"]={"11110","00001","00001","01110","00001","00001","11110"},
+    ["4"]={"10001","10001","10001","11111","00001","00001","00001"},
+    ["5"]={"11111","10000","11110","00001","00001","00001","11110"},
+    ["6"]={"01110","10000","11110","10001","10001","10001","01110"},
+    ["7"]={"11111","00001","00010","00100","01000","01000","01000"},
+    ["8"]={"01110","10001","10001","01110","10001","10001","01110"},
+    ["9"]={"01110","10001","10001","01111","00001","00001","01110"},
+    [" "]={"00000","00000","00000","00000","00000","00000","00000"},
+    ["!"]={"1","1","1","1","1","0","1"},
+    ["?"]={"01110","10001","00001","00010","00100","00000","00100"},
+    [":"]={"0","1","0","0","1","0","0"},
+    ["-"]={"00000","00000","11111","00000","00000","00000","00000"}
 }
 
-local function drawGlyph(rows,parent,xOffset,color)
-    for y,row in ipairs(rows) do
-        for x=1,#row do
-            if row:sub(x,x)=="1" then
-                local pixel=Instance.new("Frame")
-                pixel.Size=UDim2.new(0,pixelSize,0,pixelSize)
-                pixel.Position=UDim2.new(0,xOffset+(x-1)*pixelSize,0,(y-1)*pixelSize)
-                pixel.BackgroundColor3=color or mainColor
-                pixel.BorderSizePixel=0
-                pixel.Parent=parent
+local function drawGlyph(rows, parent, xOffset, color)
+    for y, row in ipairs(rows) do
+        for x = 1, #row do
+            if row:sub(x, x) == "1" then
+                local pixel = Instance.new("Frame")
+                pixel.Size = UDim2.new(0, pixelSize, 0, pixelSize)
+                pixel.Position = UDim2.new(0, xOffset + (x - 1) * pixelSize, 0, (y - 1) * pixelSize)
+                pixel.BackgroundColor3 = color or mainColor
+                pixel.BorderSizePixel = 0
+                pixel.Parent = parent
             end
         end
     end
 end
 
-local function renderText(parent,text,color)
-    local container=Instance.new("Frame")
-    container.BackgroundTransparency=1
-    container.Size=UDim2.new(0,0,0,7*pixelSize)
-    container.Parent=parent
-    local xOffset=0
-    for i=1,#text do
-        local ch=text:sub(i,i):upper()
-        local g=glyphs[ch] or glyphs[" "]
-        drawGlyph(g,container,xOffset,color)
-        xOffset+=(#g[1]+spacing)*pixelSize
+local function renderText(parent, text, color)
+    local container = Instance.new("Frame")
+    container.BackgroundTransparency = 1
+    container.Size = UDim2.new(0, 0, 0, 7 * pixelSize)
+    container.Parent = parent
+    local xOffset = 0
+    for i = 1, #text do
+        local ch = text:sub(i, i):upper()
+        local g = glyphs[ch] or glyphs[" "]
+        drawGlyph(g, container, xOffset, color)
+        xOffset += (#g[1] + spacing) * pixelSize
     end
-    container.Size=UDim2.new(0,xOffset,0,7*pixelSize)
-    return container,xOffset
+    container.Size = UDim2.new(0, xOffset, 0, 7 * pixelSize)
+    return container, xOffset
 end
 
 function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
     if not getgenv().HitNotifyEnabled then return end
-    local partName="BODY"
-    local isHeadshot=false
-    local isFatal=false
+
+    local partName = "BODY"
     if hitPart then
-        local n=hitPart.Name
-        if n=="Head" then partName="HEAD" isHeadshot=true elseif n:find("Torso") then partName="BODY" elseif n:find("Arm") or n:find("Leg") then partName="LIMB" else partName=n:upper() end
-    end
-    if targetHumanoid and targetHumanoid.Health<=0 then isFatal=true end
-    local distance=(workspace.CurrentCamera.CFrame.Position-hitPosition).Magnitude
-    local hp=targetHumanoid and tostring(math.floor(targetHumanoid.Health)) or "?"
-    local weapon=tool and tool.Name or "Unknown"
-    local timestamp=os.date("%H:%M:%S")
-
-    local box=Instance.new("Frame",logGui)
-    box.BackgroundColor3=Color3.fromRGB(0,0,0)
-    box.BackgroundTransparency=0.3
-    box.BorderSizePixel=0
-    local offsetX=4
-    local content={}
-
-    table.insert(content,{timestamp,mainColor})
-    table.insert(content,{" HIT ",mainColor})
-    table.insert(content,{targetName,nameColor})
-    table.insert(content,{" ["..partName.."] ",mainColor})
-    table.insert(content,{"DMG:"..tostring(damage).." ",mainColor})
-    table.insert(content,{"HP:"..hp.." ",hpColor})
-    table.insert(content,{"DIST:"..string.format("%.1f",distance).." ",mainColor})
-    table.insert(content,{weapon,mainColor})
-    if isHeadshot then table.insert(content,{" HS",headshotColor}) end
-    if isFatal then table.insert(content,{" FATAL",fatalColor}) end
-
-    local totalW=0
-    for _,seg in ipairs(content) do
-        local part,col=seg[1],seg[2]
-        local label,w=renderText(box,part,col)
-        label.Position=UDim2.new(0,offsetX,0,4)
-        offsetX=offsetX+w+pixelSize*2
-        totalW=offsetX
+        local n = hitPart.Name
+        if n == "Head" then
+            partName = "HEAD"
+        elseif n:find("Torso") then
+            partName = "BODY"
+        elseif n:find("Arm") or n:find("Leg") then
+            partName = "LIMB"
+        else
+            partName = n:upper()
+        end
     end
 
-    box.Size=UDim2.new(0,totalW+4,0,7*pixelSize+8)
-    table.insert(activeLogs,box)
-    for i,l in ipairs(activeLogs) do
-        l.Position=UDim2.new(0,10,0,40+(i-1)*(l.AbsoluteSize.Y+logSpacing))
+    local distance = (workspace.CurrentCamera.CFrame.Position - hitPosition).Magnitude
+    local hp = targetHumanoid and tostring(math.floor(targetHumanoid.Health)) or "?"
+    local weapon = tool and tool.Name or "Unknown"
+    local timestamp = os.date("%H:%M:%S")
+
+    local box = Instance.new("Frame", logGui)
+    box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    box.BackgroundTransparency = 0.3
+    box.BorderSizePixel = 0
+    local offsetX = 4
+    local content = {}
+
+    table.insert(content, {timestamp.." HIT ", mainColor})
+    table.insert(content, {targetName.." ", highlightColor})
+    table.insert(content, {"DMG:"..tostring(damage).." ", highlightColor})
+    table.insert(content, {"HP:"..hp.." ", mainColor})
+    table.insert(content, {"PART:"..partName.." ", mainColor})
+    table.insert(content, {"DIST:"..string.format("%.1f", distance).." ", mainColor})
+    table.insert(content, {weapon, mainColor})
+
+    local totalW = 0
+    for _, seg in ipairs(content) do
+        local part, col = seg[1], seg[2]
+        local label, w = renderText(box, part, col)
+        label.Position = UDim2.new(0, offsetX, 0, 4)
+        offsetX = offsetX + w + pixelSize * 2
+        totalW = offsetX
     end
-    task.delay(getgenv().HitNotifyDuration or 3,function()
-        for i,l in ipairs(activeLogs) do
-            if l==box then table.remove(activeLogs,i) break end
+
+    box.Size = UDim2.new(0, totalW + 4, 0, 7 * pixelSize + 8)
+    table.insert(activeLogs, box)
+    for i, l in ipairs(activeLogs) do
+        l.Position = UDim2.new(0, 10, 0, 40 + (i - 1) * (l.AbsoluteSize.Y + logSpacing))
+    end
+
+    task.delay(getgenv().HitNotifyDuration or 3, function()
+        for i, l in ipairs(activeLogs) do
+            if l == box then
+                table.remove(activeLogs, i)
+                break
+            end
         end
         box:Destroy()
-        for i,l in ipairs(activeLogs) do
-            l.Position=UDim2.new(0,10,0,40+(i-1)*(l.AbsoluteSize.Y+logSpacing))
+        for i, l in ipairs(activeLogs) do
+            l.Position = UDim2.new(0, 10, 0, 40 + (i - 1) * (l.AbsoluteSize.Y + logSpacing))
         end
     end)
 end
-
 function RandomString(length)
     local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     local result = ""
