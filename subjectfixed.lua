@@ -198,11 +198,15 @@ logGui.Name = "PixelHitLogs"
 
 local pixelSize = 2
 local mainColor = Color3.fromRGB(255, 255, 255) 
-local highlightColor = Color3.fromRGB(255, 182, 193)
+local highlightColor = Color3.fromRGB(255, 182, 193) 
 
 local spacing = 1
 local logSpacing = 5
 local activeLogs = {}
+local maxLogs = 5
+
+
+local textCache = {}
 
 local glyphs = {
     A={"01110","10001","10001","11111","10001","10001","10001"},
@@ -263,11 +267,10 @@ local function drawGlyph(rows, parent, xOffset, color)
     end
 end
 
-local function renderText(parent, text, color)
+local function renderTextRaw(text, color)
     local container = Instance.new("Frame")
     container.BackgroundTransparency = 1
     container.Size = UDim2.new(0, 0, 0, 7 * pixelSize)
-    container.Parent = parent
     local xOffset = 0
     for i = 1, #text do
         local ch = text:sub(i, i):upper()
@@ -277,6 +280,16 @@ local function renderText(parent, text, color)
     end
     container.Size = UDim2.new(0, xOffset, 0, 7 * pixelSize)
     return container, xOffset
+end
+
+local function renderTextCached(text, color)
+    local key = text.."_"..tostring(color)
+    if textCache[key] then
+        return textCache[key]:Clone(), textCache[key].Size.X.Offset
+    end
+    local container, w = renderTextRaw(text, color)
+    textCache[key] = container
+    return container:Clone(), w
 end
 
 function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
@@ -303,7 +316,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
 
     local box = Instance.new("Frame", logGui)
     box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    box.BackgroundTransparency = 0.6
+    box.BackgroundTransparency = 0.3
     box.BorderSizePixel = 0
     local offsetX = 4
     local content = {}
@@ -319,14 +332,23 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
     local totalW = 0
     for _, seg in ipairs(content) do
         local part, col = seg[1], seg[2]
-        local label, w = renderText(box, part, col)
+        local label, w = renderTextCached(part, col)
+        label.Parent = box
         label.Position = UDim2.new(0, offsetX, 0, 4)
-        offsetX = offsetX + w + pixelSize * 2
+        offsetX += w + pixelSize * 2
         totalW = offsetX
     end
 
     box.Size = UDim2.new(0, totalW + 4, 0, 7 * pixelSize + 8)
     table.insert(activeLogs, box)
+
+     
+    if #activeLogs > maxLogs then
+        activeLogs[1]:Destroy()
+        table.remove(activeLogs, 1)
+    end
+
+    
     for i, l in ipairs(activeLogs) do
         l.Position = UDim2.new(0, 10, 0, 40 + (i - 1) * (l.AbsoluteSize.Y + logSpacing))
     end
@@ -338,7 +360,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
                 break
             end
         end
-        box:Destroy()
+        if box then box:Destroy() end
         for i, l in ipairs(activeLogs) do
             l.Position = UDim2.new(0, 10, 0, 40 + (i - 1) * (l.AbsoluteSize.Y + logSpacing))
         end
