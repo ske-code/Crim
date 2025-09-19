@@ -292,80 +292,8 @@ local function renderTextCached(text, color)
     return container:Clone(), w
 end
 
-function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
-    if not getgenv().HitNotifyEnabled then return end
 
-    local partName = "BODY"
-    if hitPart then
-        local n = hitPart.Name
-        if n == "Head" then
-            partName = "HEAD"
-        elseif n:find("Torso") then
-            partName = "BODY"
-        elseif n:find("Arm") or n:find("Leg") then
-            partName = "LIMB"
-        else
-            partName = n:upper()
-        end
-    end
 
-    local distance = (workspace.CurrentCamera.CFrame.Position - hitPosition).Magnitude
-    local hp = targetHumanoid and tostring(math.floor(targetHumanoid.Health)) or "?"
-    local weapon = tool and tool.Name or "Unknown"
-    local timestamp = os.date("%H:%M:%S")
-
-    local box = Instance.new("Frame", logGui)
-    box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    box.BackgroundTransparency = 0.3
-    box.BorderSizePixel = 0
-    local offsetX = 4
-    local content = {}
-
-    table.insert(content, {timestamp.." HIT ", mainColor})
-    table.insert(content, {targetName.." ", highlightColor})
-    table.insert(content, {"DMG:"..tostring(damage).." ", highlightColor})
-    table.insert(content, {"HP:"..hp.." ", mainColor})
-    table.insert(content, {"PART:"..partName.." ", mainColor})
-    table.insert(content, {"DIST:"..string.format("%.1f", distance).." ", mainColor})
-    table.insert(content, {weapon, mainColor})
-
-    local totalW = 0
-    for _, seg in ipairs(content) do
-        local part, col = seg[1], seg[2]
-        local label, w = renderTextCached(part, col)
-        label.Parent = box
-        label.Position = UDim2.new(0, offsetX, 0, 4)
-        offsetX += w + pixelSize * 2
-        totalW = offsetX
-    end
-
-    box.Size = UDim2.new(0, totalW + 4, 0, 7 * pixelSize + 8)
-    table.insert(activeLogs, box)
-
-     
-    if #activeLogs > maxLogs then
-        activeLogs[1]:Destroy()
-        table.remove(activeLogs, 1)
-    end
-
-    
-    for i, l in ipairs(activeLogs) do
-        l.Position = UDim2.new(0, 10, 0, 40 + (i - 1) * (l.AbsoluteSize.Y + logSpacing))
-    end
-
-    task.delay(getgenv().HitNotifyDuration or 3, function()
-        for i, l in ipairs(activeLogs) do
-            if l == box then
-                table.remove(activeLogs, i)
-                break
-            end
-        end
-        if box then box:Destroy() end
-        for i, l in ipairs(activeLogs) do
-            l.Position = UDim2.new(0, 10, 0, 40 + (i - 1) * (l.AbsoluteSize.Y + logSpacing))
-        end
-    end)
-end
 function RandomString(length)
     local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     local result = ""
@@ -690,51 +618,100 @@ end
 function shoot(head)
     local tool = getCurrentTool()
     if not tool then return end
-    
+
     local values = tool:FindFirstChild("Values")
     local hitMarker = tool:FindFirstChild("Hitmarker")
     if not values or not hitMarker then return end
-    
+
     local ammo = values:FindFirstChild("SERVER_Ammo")
     local storedAmmo = values:FindFirstChild("SERVER_StoredAmmo")
     if not ammo or not storedAmmo then return end
-    
-    
+
     if not getgenv().InfAmmo and ammo.Value <= 0 then return end
-    
+
     local hitPosition = head.Position
     local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
-    
+
     if getgenv().Prediction then
         local velocity = head.Velocity or Vector3.zero
         hitPosition = hitPosition + velocity * getgenv().PredictionAmount
         hitDirection = (hitPosition - Camera.CFrame.Position).Unit
     end
-    
+
     local shootPosition = Camera.CFrame.Position
-    
-    
+
     local randomKey = RandomString(30) .. "0"
     local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, false}
     local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
-    
+
     GNX_S:FireServer(unpack(args1))
     ZFKLF__H:FireServer(unpack(args2))
-    
+
     ammo.Value = math.max(ammo.Value - 1, 0)
     hitMarker:Fire(head)
     storedAmmo.Value = storedAmmo.Value
-    
+
     createTracer(shootPosition, hitPosition)
     playHitSound()
-    
+
     local player = Players:GetPlayerFromCharacter(head.Parent)
     if player then
         local humanoid = head.Parent:FindFirstChildOfClass("Humanoid")
         showHitNotify(player.Name, 1, head, humanoid, hitPosition, tool)
-	end
+    end
 end
 
+function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
+    if not getgenv().HitNotifyEnabled then return end
+
+    local distance = math.floor((Camera.CFrame.Position - hitPosition).Magnitude)
+    local hp = targetHumanoid and tostring(math.floor(targetHumanoid.Health)) or "?"
+    local weapon = tool and tool.Name or "Unknown"
+
+    local box = Instance.new("Frame", logGui)
+    box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    box.BackgroundTransparency = 0.3
+    box.BorderSizePixel = 0
+    local offsetX = 4
+
+    local highlightColor = Color3.fromRGB(255,182,193)
+
+    local content = {}
+    table.insert(content, {"Hit "..targetName.." ", highlightColor})
+    table.insert(content, {"["..weapon.."] ", highlightColor})
+    table.insert(content, {"HP:"..hp.." ", highlightColor})
+    table.insert(content, {"Dist:"..distance.." ", highlightColor})
+
+    local totalW = 0
+    for _, seg in ipairs(content) do
+        local part, col = seg[1], seg[2]
+        local label, w = renderTextRaw(part, col)
+        label.Parent = box
+        label.Position = UDim2.new(0, offsetX, 0, 4)
+        offsetX += w + pixelSize * 2
+        totalW = offsetX
+    end
+
+    box.Size = UDim2.new(0, totalW + 4, 0, 7 * pixelSize + 8)
+    table.insert(activeLogs, box)
+
+    for i, l in ipairs(activeLogs) do
+        l.Position = UDim2.new(0, 10, 0, 40 + (i-1) * (l.AbsoluteSize.Y + 5))
+    end
+
+    task.delay(getgenv().HitNotifyDuration or 3, function()
+        for i, l in ipairs(activeLogs) do
+            if l == box then
+                table.remove(activeLogs, i)
+                break
+            end
+        end
+        if box then box:Destroy() end
+        for i, l in ipairs(activeLogs) do
+            l.Position = UDim2.new(0, 10, 0, 40 + (i-1) * (l.AbsoluteSize.Y + 5))
+        end
+    end)
+end
 task.spawn(function()
     while true do
         local waitTime = 1 / getgenv().FireRate
