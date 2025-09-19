@@ -691,34 +691,80 @@ function shoot(head)
     if not getgenv().InfAmmo and ammo.Value <= 0 then return end
 
     local hitPosition = head.Position
-    local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+    local shootPosition = LocalPlayer.Character.Head.Position 
+
+    
+    local bestHitPosition = hitPosition
+    local bestScore = 0
+    
+    
+    local circlePoints = 200  
+    local circleRadius = 100 
+    
+    for i = 1, circlePoints do
+        local angle = (i / circlePoints) * 2 * math.pi
+        local offset = Vector3.new(
+            math.cos(angle) * circleRadius,
+            math.sin(angle) * circleRadius,
+            0
+        )
+        
+        local testPosition = hitPosition + offset
+        
+        
+        local raycastParams = RaycastParams.new()
+        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+        raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+        
+        local rayDirection = (testPosition - shootPosition)
+        local raycastResult = workspace:Raycast(shootPosition, rayDirection, raycastParams)
+        
+        if not raycastResult then
+            bestHitPosition = testPosition
+            bestScore = 1
+            break
+        else
+            local hitPart = raycastResult.Instance
+            local model = hitPart:FindFirstAncestorOfClass("Model")
+            if model and model:FindFirstChild("Humanoid") then
+                local distanceScore = 1 - ((testPosition - hitPosition).Magnitude / circleRadius)
+                if distanceScore > bestScore then
+                    bestScore = distanceScore
+                    bestHitPosition = testPosition
+                end
+            end
+        end
+    end
+
+    local hitDirection = (bestHitPosition - shootPosition).Unit
 
     if getgenv().Prediction then
         local velocity = head.Velocity or Vector3.zero
-        hitPosition = hitPosition + velocity * getgenv().PredictionAmount
-        hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+        bestHitPosition = bestHitPosition + velocity * getgenv().PredictionAmount
+        hitDirection = (bestHitPosition - shootPosition).Unit
     end
-
-    local shootPosition = Camera.CFrame.Position
 
     local randomKey = RandomString(30) .. "0"
     local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, false}
-    local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
+    local args2 = {"🧈", tool, randomKey, 1, head, bestHitPosition, hitDirection}
 
     GNX_S:FireServer(unpack(args1))
     ZFKLF__H:FireServer(unpack(args2))
 
-    ammo.Value = math.max(ammo.Value - 1, 0)
+    if not getgenv().InfAmmo then
+        ammo.Value = math.max(ammo.Value - 1, 0)
+    end
+    
     hitMarker:Fire(head)
     storedAmmo.Value = storedAmmo.Value
 
-    createTracer(shootPosition, hitPosition)
+    createTracer(shootPosition, bestHitPosition)
     playHitSound()
 
     local player = Players:GetPlayerFromCharacter(head.Parent)
     if player then
         local humanoid = head.Parent:FindFirstChildOfClass("Humanoid")
-        showHitNotify(player.Name, 1, head, humanoid, hitPosition, tool)
+        showHitNotify(player.Name, 1, head, humanoid, bestHitPosition, tool)
     end
 end
 
