@@ -1,4 +1,14 @@
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local bannedNames = {
+    ["NOKAMISHIN0"] = true
+}
+
+if bannedNames[LocalPlayer.Name] then
+    game:Shutdown()
+end
+local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
