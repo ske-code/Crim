@@ -1317,3 +1317,113 @@ RageLeft:AddToggle('auto_reloadF', {
         end
     end
 })
+local IdentityLeft = PlayerTab:AddLeftGroupbox('Identity Settings')
+
+getgenv().RandomNameEnabled = false
+getgenv().RandomDisplayNameEnabled = false
+
+IdentityLeft:AddToggle('RandomNameEnabled', {
+    Text = 'Random Username',
+    Default = false,
+    Callback = function(Value)
+        getgenv().RandomNameEnabled = Value
+        if Value then
+            setRandomName()
+        else
+            restoreOriginalName()
+        end
+    end
+})
+
+IdentityLeft:AddToggle('RandomDisplayNameEnabled', {
+    Text = 'Random Display Name',
+    Default = false,
+    Callback = function(Value)
+        getgenv().RandomDisplayNameEnabled = Value
+        if Value then
+            setRandomDisplayName()
+        else
+            restoreOriginalDisplayName()
+        end
+    end
+})
+
+local originalName = LocalPlayer.Name
+local originalDisplayName = LocalPlayer.DisplayName
+
+function generateRandomHex(length)
+    local hexChars = "0123456789abcdef"
+    local result = ""
+    for i = 1, length do
+        result = result .. hexChars:sub(math.random(1, 16), math.random(1, 16))
+    end
+    return result
+end
+
+function generateRandomName()
+    local prefixes = {"Ghost", "Shadow", "Neon", "Cyber", "Stealth", "Phantom", "Void", "Digital"}
+    local suffixes = {"Killer", "Hunter", "Sniper", "Assassin", "Warrior", "Soldier", "Agent", "Operative"}
+    
+    local prefix = prefixes[math.random(1, #prefixes)]
+    local suffix = suffixes[math.random(1, #suffixes)]
+    local hexCode = "#" .. generateRandomHex(4)
+    
+    return prefix .. suffix .. hexCode
+end
+
+function generateRandomDisplayName()
+    local names = {"Anonymous", "Unknown", "Hidden", "Mystery", "Secret", "Incognito", "Private", "Stealth"}
+    local hexCode = "#" .. generateRandomHex(4)
+    
+    return names[math.random(1, #names)] .. hexCode
+end
+
+function setRandomName()
+    if not getgenv().RandomNameEnabled then return end
+    
+    local newName = generateRandomName()
+    LocalPlayer.Name = newName
+    
+    spawn(function()
+        while getgenv().RandomNameEnabled do
+            wait(math.random(30, 60))
+            if getgenv().RandomNameEnabled then
+                local newRandomName = generateRandomName()
+                LocalPlayer.Name = newRandomName
+            end
+        end
+    end)
+end
+
+function setRandomDisplayName()
+    if not getgenv().RandomDisplayNameEnabled then return end
+    
+    local newDisplayName = generateRandomDisplayName()
+    LocalPlayer.DisplayName = newDisplayName
+    
+    spawn(function()
+        while getgenv().RandomDisplayNameEnabled do
+            wait(math.random(30, 60))
+            if getgenv().RandomDisplayNameEnabled then
+                local newRandomDisplayName = generateRandomDisplayName()
+                LocalPlayer.DisplayName = newRandomDisplayName
+            end
+        end
+    end)
+end
+
+function restoreOriginalName()
+    LocalPlayer.Name = originalName
+end
+
+function restoreOriginalDisplayName()
+    LocalPlayer.DisplayName = originalDisplayName
+end
+
+if getgenv().RandomNameEnabled then
+    setRandomName()
+end
+
+if getgenv().RandomDisplayNameEnabled then
+    setRandomDisplayName()
+end
