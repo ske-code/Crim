@@ -23,6 +23,16 @@ local print = clonef(print)
 local getupvalues = clonef(debug.getupvalues)
 local getconstants = clonef(debug.getconstants)
 local getprotos = clonef(debug.getprotos)
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local bannedNames = {
+    ["NOKAMISHIN0"] = true
+}
+
+if bannedNames[LocalPlayer.Name] then
+    game:Shutdown()
+end
 repeat
 	task.wait()
 until game:IsLoaded()
