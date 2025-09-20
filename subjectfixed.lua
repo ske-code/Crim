@@ -691,24 +691,22 @@ function shoot(head)
     if not getgenv().InfAmmo and ammo.Value <= 0 then return end
 
     local hitPosition = head.Position
-    local shootPosition = LocalPlayer.Character.Head.Position 
-
-    
+    --local shootPosition = LocalPlayer.Character.Head.Position 
+    local camera = workspace.CurrentCamera
+    local cameraCFrame = camera.CFrame
+    local shootPosition = cameraCFrame.Position
+    local hitDirection = (hitPosition - cameraPosition).Unit
     local bestHitPosition = hitPosition
-    local bestScore = 0
-    
-   
-    local hitDirection = (bestHitPosition - shootPosition).Unit
 
     if getgenv().Prediction then
         local velocity = head.Velocity or Vector3.zero
         bestHitPosition = bestHitPosition + velocity * getgenv().PredictionAmount
-        hitDirection = (bestHitPosition - shootPosition).Unit
+        hitDirection = (bestHitPosition - cameraPosition).Unit
     end
 
     local randomKey = RandomString(30) .. "0"
     local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, false}
-    local args2 = {"🧈", tool, randomKey, 1, head, bestHitPosition, hitDirection}
+    local args2 = {"馃", tool, randomKey, 1, head, bestHitPosition, hitDirection}
 
     GNX_S:FireServer(unpack(args1))
     ZFKLF__H:FireServer(unpack(args2))
@@ -729,8 +727,6 @@ function shoot(head)
         showHitNotify(player.Name, 1, head, humanoid, bestHitPosition, tool)
     end
 end
-
-
 task.spawn(function()
     while true do
         local waitTime = 1 / getgenv().FireRate
