@@ -706,7 +706,7 @@ function shoot(head)
 
     local randomKey = RandomString(30) .. "0"
     local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, false}
-    local args2 = {"馃", tool, randomKey, 1, head, bestHitPosition, hitDirection}
+    local args2 = {"🧈", tool, randomKey, 1, head, bestHitPosition, hitDirection}
 
     GNX_S:FireServer(unpack(args1))
     ZFKLF__H:FireServer(unpack(args2))
