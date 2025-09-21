@@ -271,13 +271,57 @@ RageLeft:AddToggle('TracerEnabled', {
     end
 })
 
+getgenv().HitSoundType = "Default"
+getgenv().CustomHitSoundId= "rbxassetid://6534948092"
+
+LogsRight:AddDropdown('HitSoundType', {
+Values = {"Default", "Weapon", "Custom"},
+Default = 1,
+Text = 'Hit Sound Type',
+Callback = function(Value)
+getgenv().HitSoundType = Value
+end
+})
+
+LogsRight:AddInput('CustomHitSoundId', {
+Text = 'Custom Sound ID',
+Default = "rbxassetid://6534948092",
+Callback = function(Value)
+getgenv().CustomHitSoundId = Value
+end
+})
 function playHitSound()
-    local sound = Instance.new("Sound")
-    sound.SoundId = "rbxassetid://6534948092"
-    sound.Volume = 1
-    sound.PlayOnRemove = true
-    sound.Parent = Camera
-    sound:Destroy()
+if getgenv().HitSoundType == "Weapon" then
+if LocalPlayer.Character then
+for _, tool in ipairs(LocalPlayer.Character:GetChildren()) do
+if tool:IsA("Tool") then
+for _, child in ipairs(tool:GetDescendants()) do
+if child:IsA("Sound") and child.Name == "FireSound1" then
+local soundClone = child:Clone()
+soundClone.Parent = Camera
+soundClone:Play()
+game:GetService("Debris"):AddItem(soundClone, soundClone.TimeLength)
+return
+end
+end
+end
+end
+end
+elseif getgenv().HitSoundType == "Custom" then
+local sound = Instance.new("Sound")
+sound.SoundId = getgenv().CustomHitSoundId
+sound.Volume = 1
+sound.PlayOnRemove = true
+sound.Parent = Camera
+sound:Destroy()
+else
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://6534948092"
+sound.Volume = 1
+sound.PlayOnRemove = true
+sound.Parent = Camera
+sound:Destroy()
+end
 end
 getgenv().TracerOffset = Vector3.new(0, 0, 0)
 
