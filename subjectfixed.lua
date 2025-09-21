@@ -209,6 +209,13 @@ logGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local activeLogs = {}
 
+local logGui = Instance.new("ScreenGui")
+logGui.Name = "HitLogs"
+logGui.ResetOnSpawn = false
+logGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local activeLogs = {}
+
 function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
     if not getgenv().HitNotifyEnabled then return end
 
@@ -219,9 +226,10 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
     local box = Instance.new("Frame")
     box.Parent = logGui
     box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    box.BackgroundTransparency = 0.65
+    box.BackgroundTransparency = 0.475
     box.Size = UDim2.new(0, 300, 0, 40)
-
+    box.BorderSizePixel = 0
+	
     local label = Instance.new("TextLabel")
     label.Parent = box
     label.BackgroundTransparency = 1
@@ -230,7 +238,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
     label.TextSize = 20
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.TextYAlignment = Enum.TextYAlignment.Center
-    label.Text = "Hit target: "..targetName.." ["..weapon.."] HP:"..hp.." Dist:"..distance
+    label.Text = "Hit target: "..targetName.." ["..weapon.."] Health:"..hp.." Dist:"..distance
     label.Size = UDim2.new(1, -10, 1, 0)
 
     box.Size = UDim2.new(0, label.TextBounds.X + 20, 0, label.TextBounds.Y + 10)
