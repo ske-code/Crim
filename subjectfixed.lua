@@ -1495,7 +1495,7 @@ LegitLeft:AddSlider('SilentAimFOV', {
     Text = 'Silent Aim FOV',
     Default = 50,
     Min = 10,
-    Max = 300,
+    Max = 500,
     Rounding = 0,
     Callback = function(Value)
         getgenv().SilentAimFOV = Value
@@ -1628,19 +1628,20 @@ function getSilentAimTarget()
                         closestTarget = {Player = player, Part = targetPart}
                     end
                 end
-            end
+			end
         end
-    end
+	
+  
     
     return closestTarget
 end
 
 function calculateSilentAimHitChance()
     return math.random(1, 100) <= getgenv().SilentAimHitChance
-end
+	end
 
 function createSilentAimTracer(startPos, endPos)
-   if not getgenv().SilentAimTracerEnabled then return end
+    if not getgenv().SilentAimTracerEnabled then return end
 
     local tracerModel = Instance.new("Model")
     tracerModel.Name = "SilentAimTracer"
@@ -1673,49 +1674,63 @@ function createSilentAimTracer(startPos, endPos)
     end)
 end
 
-local oldNamecall
-oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local method = getnamecallmethod()
+local function isCaller()
+    local callingScript = getcallingscript()
+    if not callingScript then return false end
+    
+    local isLocalScript = callingScript:IsA("LocalScript")
+    local isPlayerScript = callingScript:FindFirstAncestorOfClass("Player") == LocalPlayer
+    
+    return isLocalScript and isPlayerScript
+end
+
+local oldGNX_S
+oldGNX_S = hookfunction(GNX_S.FireServer, function(self, ...)
     local args = {...}
     
-    if getgenv().SilentAimEnabled and method == "FireServer" then
-        if self == GNX_S and #args >= 7 then
-            if calculateSilentAimHitChance() then
-                local target = getSilentAimTarget()
-                
-                if target then
-                    local hitPosition = target.Part.Position
-                    local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
-                    
-                    args[5] = hitPosition
-                    args[6] = {hitDirection}
-                    
-                    if getgenv().SilentAimTracerEnabled then
-                        createSilentAimTracer(Camera.CFrame.Position, hitPosition)
-                    end
-                end
-            end
-        elseif self == ZFKLF__H and #args >= 7 then
-            if calculateSilentAimHitChance() then
-                local target = getSilentAimTarget()
-                
-                if target then
-                    local hitPosition = target.Part.Position
-                    local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
-                    
-                    args[5] = target.Part
-                    args[6] = hitPosition
-                    args[7] = hitDirection
-                    
-                    if getgenv().SilentAimTracerEnabled then
-                        createSilentAimTracer(Camera.CFrame.Position, hitPosition)
-                    end
-                end
+    if getgenv().SilentAimEnabled and calculateSilentAimHitChance() and isCaller() then
+        local target = getSilentAimTarget()
+        
+        if target then
+            local shootPosition = Camera.CFrame.Position
+            local hitPosition = target.Part.Position
+            local hitDirection = (hitPosition - shootPosition).Unit
+            
+            args[5] = hitPosition
+            args[6] = {hitDirection}
+            
+            if getgenv().SilentAimTracerEnabled then
+                createSilentAimTracer(shootPosition, hitPosition)
             end
         end
     end
     
-    return oldNamecall(self, unpack(args))
+    return oldGNX_S(self, unpack(args))
+end)
+
+local oldZFKLF__H
+oldZFKLF__H = hookfunction(ZFKLF__H.FireServer, function(self, ...)
+    local args = {...}
+    
+    if getgenv().SilentAimEnabled and calculateSilentAimHitChance() and isCaller() then
+        local target = getSilentAimTarget()
+        
+        if target then
+            local shootPosition = Camera.CFrame.Position
+            local hitPosition = target.Part.Position
+            local hitDirection = (hitPosition - shootPosition).Unit
+            
+            args[5] = target.Part
+            args[6] = hitPosition
+            args[7] = hitDirection
+            
+            if getgenv().SilentAimTracerEnabled then
+                createSilentAimTracer(shootPosition, hitPosition)
+            end
+        end
+    end
+    
+    return oldZFKLF__H(self, unpack(args))
 end)
 
 task.spawn(function()
