@@ -1471,3 +1471,256 @@ end
 if getgenv().RandomDisplayNameEnabled then
     setRandomDisplayName()
 end
+local LegitTab = Window:AddTab('LegitBot')
+local LegitLeft = LegitTab:AddLeftGroupbox('Silent Aim Settings')
+
+getgenv().SilentAimEnabled = false
+getgenv().SilentAimFOV = 50
+getgenv().SilentAimHitChance = 100
+getgenv().SilentAimTargetPart = "Head"
+getgenv().SilentAimVisibilityCheck = true
+getgenv().SilentAimTeamCheck = true
+getgenv().SilentAimTracerEnabled = false
+getgenv().SilentAimTracerColor = Color3.fromRGB(255, 0, 255)
+
+LegitLeft:AddToggle('SilentAimEnabled', {
+    Text = 'Enable Silent Aim',
+    Default = false,
+    Callback = function(Value)
+        getgenv().SilentAimEnabled = Value
+    end
+})
+
+LegitLeft:AddSlider('SilentAimFOV', {
+    Text = 'Silent Aim FOV',
+    Default = 50,
+    Min = 10,
+    Max = 300,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().SilentAimFOV = Value
+    end
+})
+
+LegitLeft:AddSlider('SilentAimHitChance', {
+    Text = 'Hit Chance %',
+    Default = 100,
+    Min = 0,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().SilentAimHitChance = Value
+    end
+})
+
+LegitLeft:AddDropdown('SilentAimTargetPart', {
+    Values = {"Head", "UpperTorso", "LowerTorso"},
+    Default = 1,
+    Text = 'Target Part',
+    Callback = function(Value)
+        getgenv().SilentAimTargetPart = Value
+    end
+})
+
+LegitLeft:AddToggle('SilentAimVisibilityCheck', {
+    Text = 'Visibility Check',
+    Default = true,
+    Callback = function(Value)
+        getgenv().SilentAimVisibilityCheck = Value
+    end
+})
+
+LegitLeft:AddToggle('SilentAimTeamCheck', {
+    Text = 'Team Check',
+    Default = true,
+    Callback = function(Value)
+        getgenv().SilentAimTeamCheck = Value
+    end
+})
+
+LegitLeft:AddToggle('SilentAimTracerEnabled', {
+    Text = 'Silent Aim Tracer',
+    Default = false,
+    Callback = function(Value)
+        getgenv().SilentAimTracerEnabled = Value
+    end
+}):AddColorPicker('SilentAimTracerColor', {
+    Default = Color3.fromRGB(255, 0, 255),
+    Callback = function(Value)
+        getgenv().SilentAimTracerColor = Value
+    end
+})
+
+local LegitRight = LegitTab:AddRightGroupbox('FOV Circle')
+
+getgenv().ShowFOV = true
+getgenv().FOVColor = Color3.fromRGB(255, 255, 255)
+
+LegitRight:AddToggle('ShowFOV', {
+    Text = 'Show FOV',
+    Default = true,
+    Callback = function(Value)
+        getgenv().ShowFOV = Value
+    end
+})
+
+LegitRight:AddToggle('FOVColorToggle', {
+    Text = 'FOV Color',
+    Default = false,
+    Callback = function(Value) end
+}):AddColorPicker('FOVColor', {
+    Default = Color3.fromRGB(255, 255, 255),
+    Callback = function(Value)
+        getgenv().FOVColor = Value
+    end
+})
+
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = false
+fovCircle.Color = getgenv().FOVColor
+fovCircle.Thickness = 1
+fovCircle.Filled = false
+
+function updateFOV()
+    fovCircle.Visible = getgenv().ShowFOV and getgenv().SilentAimEnabled
+    fovCircle.Radius = getgenv().SilentAimFOV
+    fovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    fovCircle.Color = getgenv().FOVColor
+end
+
+function isInFOV(position)
+    local screenPos, onScreen = Camera:WorldToViewportPoint(position)
+    if not onScreen then return false end
+    
+    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local mousePos = Vector2.new(screenPos.X, screenPos.Y)
+    local distance = (mousePos - center).Magnitude
+    
+    return distance <= getgenv().SilentAimFOV
+end
+
+function getSilentAimTarget()
+    if not getgenv().SilentAimEnabled then return nil end
+    
+    local closestTarget = nil
+    local closestDistance = math.huge
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            if getgenv().SilentAimTeamCheck and player.Team == LocalPlayer.Team then
+                continue
+            end
+            
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            local targetPart = player.Character:FindFirstChild(getgenv().SilentAimTargetPart)
+            
+            if humanoid and humanoid.Health > 0 and targetPart then
+                if getgenv().SilentAimVisibilityCheck and not canSeeTarget(targetPart) then
+                    continue
+                end
+                
+                if isInFOV(targetPart.Position) then
+                    local screenPos = Camera:WorldToViewportPoint(targetPart.Position)
+                    local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
+                    
+                    if distance < closestDistance then
+                        closestDistance = distance
+                        closestTarget = {Player = player, Part = targetPart}
+                    end
+                end
+            end
+        end
+    end
+    
+    return closestTarget
+end
+
+function calculateSilentAimHitChance()
+    return math.random(1, 100) <= getgenv().SilentAimHitChance
+end
+
+function createSilentAimTracer(startPos, endPos)
+   if not getgenv().SilentAimTracerEnabled then return end
+
+    local tracerModel = Instance.new("Model")
+    tracerModel.Name = "SilentAimTracer"
+
+    local beam = Instance.new("Beam")
+    beam.Color = ColorSequence.new(getgenv().SilentAimTracerColor)
+    beam.Width0 = 0.2
+    beam.Width1 = 0.2
+    beam.Texture = "rbxassetid://7136858729"
+    beam.TextureSpeed = 1
+    beam.Brightness = 5
+    beam.LightEmission = 3
+    beam.FaceCamera = true
+
+    local a0 = Instance.new("Attachment")
+    local a1 = Instance.new("Attachment")
+    a0.WorldPosition = startPos
+    a1.WorldPosition = endPos
+
+    beam.Attachment0 = a0
+    beam.Attachment1 = a1
+
+    beam.Parent = tracerModel
+    a0.Parent = tracerModel
+    a1.Parent = tracerModel
+    tracerModel.Parent = workspace
+
+    delay(0.3, function()
+        if tracerModel then tracerModel:Destroy() end
+    end)
+end
+
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+    
+    if getgenv().SilentAimEnabled and method == "FireServer" then
+        if self == GNX_S and #args >= 7 then
+            if calculateSilentAimHitChance() then
+                local target = getSilentAimTarget()
+                
+                if target then
+                    local hitPosition = target.Part.Position
+                    local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+                    
+                    args[5] = hitPosition
+                    args[6] = {hitDirection}
+                    
+                    if getgenv().SilentAimTracerEnabled then
+                        createSilentAimTracer(Camera.CFrame.Position, hitPosition)
+                    end
+                end
+            end
+        elseif self == ZFKLF__H and #args >= 7 then
+            if calculateSilentAimHitChance() then
+                local target = getSilentAimTarget()
+                
+                if target then
+                    local hitPosition = target.Part.Position
+                    local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+                    
+                    args[5] = target.Part
+                    args[6] = hitPosition
+                    args[7] = hitDirection
+                    
+                    if getgenv().SilentAimTracerEnabled then
+                        createSilentAimTracer(Camera.CFrame.Position, hitPosition)
+                    end
+                end
+            end
+        end
+    end
+    
+    return oldNamecall(self, unpack(args))
+end)
+
+task.spawn(function()
+    while true do
+        updateFOV()
+        wait(0.1)
+    end
+end)
