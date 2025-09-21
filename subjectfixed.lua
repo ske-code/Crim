@@ -202,122 +202,58 @@ LogsRight:AddToggle('HitNotifyColorToggle', {
     Default = false,
     Callback = function(Value) end
 })
+local logGui = Instance.new("ScreenGui")
+logGui.Name = "HitLogs"
+logGui.ResetOnSpawn = false
+logGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
-local HitNotify = {}
+local activeLogs = {}
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "HitNotifyUI"
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
+    if not getgenv().HitNotifyEnabled then return end
 
-HitNotify.ActiveLogs = {}
-HitNotify.LogCount = 0
+    local distance = math.floor((Camera.CFrame.Position - hitPosition).Magnitude)
+    local hp = targetHumanoid and tostring(math.floor(targetHumanoid.Health)) or "?"
+    local weapon = tool and tool.Name or "Unknown"
 
-function HitNotify:CreateLog(message)
-    local textService = game:GetService("TextService")
-    local textSize = textService:GetTextSize(message, 18, Enum.Font.Gotham, Vector2.new(400, 100))
-    
-    local LogFrame = Instance.new("Frame")
-    LogFrame.Name = "HitLog"
-    LogFrame.Size = UDim2.new(0, textSize.X + 20, 0, 40)
-    LogFrame.Position = UDim2.new(0, 20, 0, 60 + (self.LogCount * 45))
-    LogFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    LogFrame.BackgroundTransparency = 0.3
-    LogFrame.BorderSizePixel = 0
-    LogFrame.Parent = ScreenGui
+    local box = Instance.new("Frame")
+    box.Parent = logGui
+    box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    box.BackgroundTransparency = 0.65
+    box.Size = UDim2.new(0, 300, 0, 40)
 
-    local TextLabel = Instance.new("TextLabel")
-    TextLabel.Size = UDim2.new(1, -10, 1, -10)
-    TextLabel.Position = UDim2.new(0, 5, 0, 5)
-    TextLabel.BackgroundTransparency = 1
-    TextLabel.Text = message
-    TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TextLabel.TextSize = 18
-    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TextLabel.RichText = true
-    TextLabel.Parent = LogFrame
-    
-    pcall(function()
-        TextLabel.FontFace = Font.new("rbxassetid://12187371840")
-    end)
+    local label = Instance.new("TextLabel")
+    label.Parent = box
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(255, 182, 193)
+    label.FontFace = Font.new("rbxassetid://12187371840")
+    label.TextSize = 20
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextYAlignment = Enum.TextYAlignment.Center
+    label.Text = "Hit target: "..targetName.." ["..weapon.."] HP:"..hp.." Dist:"..distance
+    label.Size = UDim2.new(1, -10, 1, 0)
 
-    self.LogCount = self.LogCount + 1
-    table.insert(self.ActiveLogs, LogFrame)
+    box.Size = UDim2.new(0, label.TextBounds.X + 20, 0, label.TextBounds.Y + 10)
 
-    for i, log in ipairs(self.ActiveLogs) do
-        log:TweenPosition(UDim2.new(0, 20, 0, 60 + ((i-1) * 45)), "Out", "Quad", 0.2)
+    table.insert(activeLogs, box)
+
+    for i, l in ipairs(activeLogs) do
+        l.Position = UDim2.new(0, 10, 0, 40 + (i - 1) * (l.AbsoluteSize.Y + 5))
     end
 
     task.delay(getgenv().HitNotifyDuration or 3, function()
-        if LogFrame and LogFrame.Parent then
-            LogFrame:TweenPosition(UDim2.new(-1, 0, 0, LogFrame.Position.Y.Offset), "Out", "Quad", 0.3)
-            task.wait(0.3)
-            LogFrame:Destroy()
-            
-            for i, log in ipairs(self.ActiveLogs) do
-                if log == LogFrame then
-                    table.remove(self.ActiveLogs, i)
-                    break
-                end
+        for i, l in ipairs(activeLogs) do
+            if l == box then
+                table.remove(activeLogs, i)
+                break
             end
-            
-            self.LogCount = self.LogCount - 1
-            
-            for i, log in ipairs(self.ActiveLogs) do
-                log:TweenPosition(UDim2.new(0, 20, 0, 60 + ((i-1) * 45)), "Out", "Quad", 0.2)
-            end
+        end
+        if box then box:Destroy() end
+        for i, l in ipairs(activeLogs) do
+            l.Position = UDim2.new(0, 10, 0, 40 + (i - 1) * (l.AbsoluteSize.Y + 5))
         end
     end)
-    
-    return LogFrame
 end
-
-function HitNotify:ShowHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
-    if not getgenv().HitNotifyEnabled then return end
-
-    local partName = "BODY"
-    local isHeadshot = false
-    local isFatal = false
-
-    if hitPart then
-        local name = hitPart.Name
-        if name == "Head" then
-            partName = "HEAD"
-            isHeadshot = true
-        elseif name:find("Torso") then
-            partName = "BODY"
-        elseif name:find("Arm") or name:find("Leg") then
-            partName = "LIMB"
-        else
-            partName = name:upper()
-        end
-    end
-
-    local distance = (workspace.CurrentCamera.CFrame.Position - hitPosition).Magnitude
-    local health = targetHumanoid and math.floor(targetHumanoid.Health) or "?"
-    local weaponName = tool and tool.Name or "Unknown"
-
-    if targetHumanoid and targetHumanoid.Health <= 0 then
-        isFatal = true
-    end
-
-    local message = string.format(
-        "Hit <font color='rgb(255, 182, 193)'>%s</font> [%s] | Damage: %d | HP: %s | <font color='rgb(255, 105, 180)'>%.1f studs</font> | <font color='rgb(255, 105, 180)'>%s</font>%s%s",
-        targetName,
-        partName,
-        damage,
-        tostring(health),
-        distance,
-        weaponName,
-        isHeadshot and " | <font color='rgb(255, 50, 50)'>Headshot</font>" or "",
-        isFatal and " | <font color='rgb(255, 0, 0)'>Fatal</font>" or ""
-    )
-
-    self:CreateLog(message)
-end
-
-return HitNotify
-
 function RandomString(length)
     local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     local result = ""
