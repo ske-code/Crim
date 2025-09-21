@@ -203,7 +203,76 @@ LogsRight:AddToggle('HitNotifyColorToggle', {
     Callback = function(Value) end
 })
 
-function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
+local HitNotify = {}
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "HitNotifyUI"
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+HitNotify.ActiveLogs = {}
+HitNotify.LogCount = 0
+
+function HitNotify:CreateLog(message)
+    local textService = game:GetService("TextService")
+    local textSize = textService:GetTextSize(message, 18, Enum.Font.Gotham, Vector2.new(400, 100))
+    
+    local LogFrame = Instance.new("Frame")
+    LogFrame.Name = "HitLog"
+    LogFrame.Size = UDim2.new(0, textSize.X + 20, 0, 40)
+    LogFrame.Position = UDim2.new(0, 20, 0, 60 + (self.LogCount * 45))
+    LogFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    LogFrame.BackgroundTransparency = 0.3
+    LogFrame.BorderSizePixel = 0
+    LogFrame.Parent = ScreenGui
+
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(1, -10, 1, -10)
+    TextLabel.Position = UDim2.new(0, 5, 0, 5)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Text = message
+    TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextLabel.TextSize = 18
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TextLabel.RichText = true
+    TextLabel.Parent = LogFrame
+    
+    pcall(function()
+        TextLabel.FontFace = Font.new("rbxassetid://12187371840")
+    end)
+
+    self.LogCount = self.LogCount + 1
+    table.insert(self.ActiveLogs, LogFrame)
+
+    for i, log in ipairs(self.ActiveLogs) do
+        log:TweenPosition(UDim2.new(0, 20, 0, 60 + ((i-1) * 45)), "Out", "Quad", 0.2)
+    end
+
+    task.delay(getgenv().HitNotifyDuration or 3, function()
+        if LogFrame and LogFrame.Parent then
+            LogFrame:TweenPosition(UDim2.new(-1, 0, 0, LogFrame.Position.Y.Offset), "Out", "Quad", 0.3)
+            task.wait(0.3)
+            LogFrame:Destroy()
+            
+            for i, log in ipairs(self.ActiveLogs) do
+                if log == LogFrame then
+                    table.remove(self.ActiveLogs, i)
+                    break
+                end
+            end
+            
+            self.LogCount = self.LogCount - 1
+            
+            for i, log in ipairs(self.ActiveLogs) do
+                log:TweenPosition(UDim2.new(0, 20, 0, 60 + ((i-1) * 45)), "Out", "Quad", 0.2)
+            end
+        end
+    end)
+    
+    return LogFrame
+end
+
+function HitNotify:ShowHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
     if not getgenv().HitNotifyEnabled then return end
 
     local partName = "BODY"
@@ -224,30 +293,30 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
         end
     end
 
-    local distance = (Camera.CFrame.Position - hitPosition).Magnitude
+    local distance = (workspace.CurrentCamera.CFrame.Position - hitPosition).Magnitude
     local health = targetHumanoid and math.floor(targetHumanoid.Health) or "?"
     local weaponName = tool and tool.Name or "Unknown"
-    local timestamp = os.date("%H:%M:%S")
 
     if targetHumanoid and targetHumanoid.Health <= 0 then
         isFatal = true
     end
 
     local message = string.format(
-        "[%s] Hit %s [%s] | Damage: %d | HP: %s | Distance: %.1f | Weapon: %s%s%s",
-        timestamp,
+        "Hit <font color='rgb(255, 182, 193)'>%s</font> [%s] | Damage: %d | HP: %s | <font color='rgb(255, 105, 180)'>%.1f studs</font> | <font color='rgb(255, 105, 180)'>%s</font>%s%s",
         targetName,
         partName,
         damage,
         tostring(health),
         distance,
         weaponName,
-        isHeadshot and " | Headshot" or "",
-        isFatal and " | Fatal" or ""
+        isHeadshot and " | <font color='rgb(255, 50, 50)'>Headshot</font>" or "",
+        isFatal and " | <font color='rgb(255, 0, 0)'>Fatal</font>" or ""
     )
 
-    Library:Notify(message, getgenv().HitNotifyDuration)
+    self:CreateLog(message)
 end
+
+return HitNotify
 
 function RandomString(length)
     local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
