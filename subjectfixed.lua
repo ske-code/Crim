@@ -208,13 +208,8 @@ logGui.ResetOnSpawn = false
 logGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local activeLogs = {}
-
-local logGui = Instance.new("ScreenGui")
-logGui.Name = "HitLogs"
-logGui.ResetOnSpawn = false
-logGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-
-local activeLogs = {}
+local white = Color3.fromRGB(255, 255, 255)
+local pink = Color3.fromRGB(255, 182, 193)
 
 function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
     if not getgenv().HitNotifyEnabled then return end
@@ -226,22 +221,42 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
     local box = Instance.new("Frame")
     box.Parent = logGui
     box.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    box.BackgroundTransparency = 0.475
-    box.Size = UDim2.new(0, 300, 0, 40)
+    box.BackgroundTransparency = 0.3
     box.BorderSizePixel = 0
-	
-    local label = Instance.new("TextLabel")
-    label.Parent = box
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.fromRGB(255, 182, 193)
-    label.FontFace = Font.new("rbxassetid://12187371840")
-    label.TextSize = 20
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextYAlignment = Enum.TextYAlignment.Center
-    label.Text = "Hit target: "..targetName.." ["..weapon.."] Health:"..hp.." Dist:"..distance
-    label.Size = UDim2.new(1, -10, 1, 0)
 
-    box.Size = UDim2.new(0, label.TextBounds.X + 20, 0, label.TextBounds.Y + 10)
+    local parts = {
+        {"Hit target: ", white},
+        {targetName.." ", pink},
+        {"["..weapon.."] ", white},
+        {"HP:", white},
+        {hp.." ", pink},
+        {"Dist:"..distance, white}
+    }
+
+    local offsetX = 6
+    local totalW, maxH = 0, 0
+
+    for _, seg in ipairs(parts) do
+        local txt, col = seg[1], seg[2]
+        local label = Instance.new("TextLabel")
+        label.Parent = box
+        label.BackgroundTransparency = 1
+        label.BorderSizePixel = 0
+        label.TextColor3 = col
+        label.FontFace = Font.new("rbxassetid://12187371840")
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextYAlignment = Enum.TextYAlignment.Center
+        label.Text = txt
+        label.Position = UDim2.new(0, offsetX, 0, 0)
+        label.Size = UDim2.new(0, label.TextBounds.X, 0, label.TextBounds.Y)
+
+        offsetX = offsetX + label.TextBounds.X
+        totalW = offsetX
+        maxH = math.max(maxH, label.TextBounds.Y)
+    end
+
+    box.Size = UDim2.new(0, totalW + 12, 0, maxH + 8)
 
     table.insert(activeLogs, box)
 
