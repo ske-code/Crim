@@ -244,7 +244,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
         label.BorderSizePixel = 0
         label.TextColor3 = col
         label.FontFace = Font.new("rbxassetid://12187371840")
-        label.TextSize = 14
+        label.TextSize = 18
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.TextYAlignment = Enum.TextYAlignment.Center
         label.Text = txt
