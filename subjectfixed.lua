@@ -244,12 +244,12 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
         label.BorderSizePixel = 0
         label.TextColor3 = col
         label.FontFace = Font.new("rbxassetid://12187371840")
-        label.TextSize = 18
+        label.TextSize = 20
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.TextYAlignment = Enum.TextYAlignment.Center
         label.Text = txt
+        label.AutomaticSize = Enum.AutomaticSize.XY
         label.Position = UDim2.new(0, offsetX, 0, 0)
-        label.Size = UDim2.new(0, label.TextBounds.X, 0, label.TextBounds.Y)
 
         offsetX = offsetX + label.TextBounds.X
         totalW = offsetX
@@ -277,6 +277,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
         end
     end)
 end
+
 function RandomString(length)
     local charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     local result = ""
