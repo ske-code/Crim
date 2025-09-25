@@ -164,7 +164,7 @@ RageLeft:AddSlider('TracerWidth', {
 
 RageLeft:AddSlider('TracerLifetime', {
     Text = 'Tracer Lifetime',
-    Deflocal= 0.3,
+    Default = 0.3,
     Min = 0.1,
     Max = 100,
     Rounding = 1,
