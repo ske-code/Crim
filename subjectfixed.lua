@@ -1501,3 +1501,238 @@ if getgenv().RandomDisplayNameEnabled then
     setRandomDisplayName()
 end
  
+local ShaderRight = VisualTab:AddRightGroupbox('Rich Shader')
+
+getgenv().ShaderEnabled = false
+getgenv().ShaderType = "Bloom"
+getgenv().ShaderIntensity = 1.0
+getgenv().ShaderColor = Color3.fromRGB(255, 255, 255)
+
+ShaderRight:AddToggle('ShaderEnabled', {
+    Text = 'Enable Shader',
+    Default = false,
+    Callback = function(Value)
+        getgenv().ShaderEnabled = Value
+        updateShader()
+    end
+})
+
+ShaderRight:AddDropdown('ShaderType', {
+    Values = {"Bloom", "Blur", "ColorCorrection", "SunRays", "DepthOfField"},
+    Default = 1,
+    Text = 'Shader Type',
+    Callback = function(Value)
+        getgenv().ShaderType = Value
+        if getgenv().ShaderEnabled then
+            updateShader()
+        end
+    end
+})
+
+ShaderRight:AddSlider('ShaderIntensity', {
+    Text = 'Shader Intensity',
+    Default = 1.0,
+    Min = 0.1,
+    Max = 5.0,
+    Rounding = 1,
+    Callback = function(Value)
+        getgenv().ShaderIntensity = Value
+        if getgenv().ShaderEnabled then
+            updateShader()
+        end
+    end
+})
+
+ShaderRight:AddToggle('ShaderColorToggle', {
+    Text = 'Shader Color',
+    Default = false,
+    Callback = function(Value) end
+}):AddColorPicker('ShaderColor', {
+    Default = Color3.fromRGB(255, 255, 255),
+    Callback = function(Value)
+        getgenv().ShaderColor = Value
+        if getgenv().ShaderEnabled then
+            updateShader()
+        end
+    end
+})
+
+local currentShader = nil
+
+function updateShader()
+    if currentShader then
+        currentShader:Destroy()
+        currentShader = nil
+    end
+    
+    if not getgenv().ShaderEnabled then return end
+    
+    local lighting = game:GetService("Lighting")
+    local camera = workspace.CurrentCamera
+    
+    if getgenv().ShaderType == "Bloom" then
+        local bloom = Instance.new("BloomEffect")
+        bloom.Intensity = getgenv().ShaderIntensity * 0.5
+        bloom.Size = 24
+        bloom.Threshold = 0.95
+        bloom.Parent = lighting
+        currentShader = bloom
+        
+    elseif getgenv().ShaderType == "Blur" then
+        local blur = Instance.new("BlurEffect")
+        blur.Size = getgenv().ShaderIntensity * 10
+        blur.Parent = lighting
+        currentShader = blur
+        
+    elseif getgenv().ShaderType == "ColorCorrection" then
+        local colorCorrection = Instance.new("ColorCorrectionEffect")
+        colorCorrection.Brightness = getgenv().ShaderIntensity * 0.1
+        colorCorrection.Contrast = getgenv().ShaderIntensity * 0.1
+        colorCorrection.Saturation = getgenv().ShaderIntensity * 0.1
+        colorCorrection.TintColor = getgenv().ShaderColor
+        colorCorrection.Parent = lighting
+        currentShader = colorCorrection
+        
+    elseif getgenv().ShaderType == "SunRays" then
+        local sunRays = Instance.new("SunRaysEffect")
+        sunRays.Intensity = getgenv().ShaderIntensity * 0.05
+        sunRays.Spread = 1
+        sunRays.Parent = lighting
+        currentShader = sunRays
+        
+    elseif getgenv().ShaderType == "DepthOfField" then
+        local dof = Instance.new("DepthOfFieldEffect")
+        dof.FarIntensity = getgenv().ShaderIntensity * 0.5
+        dof.FocusDistance = 50
+        dof.InFocusRadius = 30
+        dof.NearIntensity = 0.5
+        dof.Parent = lighting
+        currentShader = dof
+    end
+end
+
+game:GetService("Lighting").ChildAdded:Connect(function(child)
+    if child:IsA("PostEffect") and child ~= currentShader then
+        child:Destroy()
+    end
+end)
+
+local ToolRight = PlayerTab:AddRightGroupbox('Force Field')
+
+getgenv().ForceFieldToolEnabled = false
+getgenv().ForceFieldToolColor = Color3.fromRGB(0, 255, 255)
+getgenv().ForceFieldToolTransparency = 0.3
+
+local originalToolMaterials = {}
+local originalToolColors = {}
+local originalToolTransparency = {}
+
+ToolRight:AddToggle('ForceFieldToolEnabled', {
+    Text = 'Force Tool',
+    Default = false,
+    Callback = function(Value)
+        getgenv().ForceFieldToolEnabled = Value
+        if Value then
+            applyForceFieldToTools()
+        else
+            restoreOriginalTools()
+        end
+    end
+})
+
+ToolRight:AddToggle('ForceFieldToolColorToggle', {
+    Text = 'Force Field Color',
+    Default = false,
+    Callback = function(Value) end
+}):AddColorPicker('ForceFieldToolColor', {
+    Default = Color3.fromRGB(0, 255, 255),
+    Callback = function(Value)
+        getgenv().ForceFieldToolColor = Value
+        if getgenv().ForceFieldToolEnabled then
+            applyForceFieldToTools()
+        end
+    end
+})
+
+ToolRight:AddSlider('ForceFieldToolTransparency', {
+    Text = 'Force Field Transparency',
+    Default = 0.3,
+    Min = 0,
+    Max = 1,
+    Rounding = 2,
+    Callback = function(Value)
+        getgenv().ForceFieldToolTransparency = Value
+        if getgenv().ForceFieldToolEnabled then
+            applyForceFieldToTools()
+        end
+    end
+})
+
+function applyForceFieldToTools()
+    if not LocalPlayer.Character then return end
+    
+    for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
+        if tool:IsA("Tool") then
+            if not originalToolMaterials[tool] then
+                originalToolMaterials[tool] = {}
+                originalToolColors[tool] = {}
+                originalToolTransparency[tool] = {}
+            end
+            
+            for _, part in pairs(tool:GetDescendants()) do
+                if part:IsA("BasePart") or part:IsA("MeshPart") then
+                    if not originalToolMaterials[tool][part] then
+                        originalToolMaterials[tool][part] = part.Material
+                        originalToolColors[tool][part] = part.Color
+                        originalToolTransparency[tool][part] = part.Transparency
+                    end
+                    
+                    part.Material = Enum.Material.ForceField
+                    part.Color = getgenv().ForceFieldToolColor
+                    part.Transparency = getgenv().ForceFieldToolTransparency
+                end
+            end
+        end
+    end
+end
+
+function restoreOriginalTools()
+    for tool, parts in pairs(originalToolMaterials) do
+        if tool and tool.Parent then
+            for part, originalMaterial in pairs(parts) do
+                if part and part.Parent then
+                    part.Material = originalMaterial
+                    part.Color = originalToolColors[tool][part]
+                    part.Transparency = originalToolTransparency[tool][part]
+                end
+            end
+        end
+    end
+    
+    originalToolMaterials = {}
+    originalToolColors = {}
+    originalToolTransparency = {}
+end
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    if getgenv().ForceFieldToolEnabled then
+        character:WaitForChild("Humanoid")
+        applyForceFieldToTools()
+    end
+end)
+
+LocalPlayer.CharacterRemoving:Connect(function()
+    if getgenv().ForceFieldToolEnabled then
+        restoreOriginalTools()
+    end
+end)
+
+game:GetService("RunService").Heartbeat:Connect(function()
+    if getgenv().ForceFieldToolEnabled and LocalPlayer.Character then
+        applyForceFieldToTools()
+    end
+end)
+
+if LocalPlayer.Character and getgenv().ForceFieldToolEnabled then
+    applyForceFieldToTools()
+end
