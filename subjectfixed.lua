@@ -690,10 +690,19 @@ function shoot(head)
         showHitNotify(player.Name, 1, head, humanoid, hitPosition, tool)
 	end
 end
+getgenv().NoFireRateLimit = false
+
+RageLeft:AddToggle('NoFireRateLimit', {
+    Text = 'No Fire Rate Limit',
+    Default = false,
+    Callback = function(Value)
+        getgenv().NoFireRateLimit = Value
+    end
+})
 
 task.spawn(function()
     while true do
-        local waitTime = 1 / getgenv().FireRate
+        local waitTime = getgenv().NoFireRateLimit and 0 or (1 / getgenv().FireRate)
         wait(waitTime)
         
         if getgenv().RageEnabled and tick() - getgenv().LastShot >= waitTime then
