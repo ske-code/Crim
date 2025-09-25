@@ -164,7 +164,7 @@ RageLeft:AddSlider('TracerWidth', {
 
 RageLeft:AddSlider('TracerLifetime', {
     Text = 'Tracer Lifetime',
-    Default = 0.3,
+    Deflocal= 0.3,
     Min = 0.1,
     Max = 100,
     Rounding = 1,
@@ -518,7 +518,7 @@ function isInTargetList(player)
     end
     return false
 end
-
+--[[
 function getClosest()
     if getgenv().TargetLock and getgenv().LockedTarget and getgenv().LockedTarget.Character then
         local head = getgenv().LockedTarget.Character:FindFirstChild("Head")
@@ -569,12 +569,162 @@ function getClosest()
                         end
                     end
                 end
+			end
+        end
+    end
+
+    return closest
+end
+--]]
+getgenv().FovEnabled = true
+getgenv().FovRadius = 100
+getgenv().NoFovLimit = false
+
+RageLeft:AddToggle('FovEnabled', {
+    Text = 'FOV Circle',
+    Default = true,
+    Callback = function(Value)
+        getgenv().FovEnabled = Value
+        updateFovCircle()
+    end
+})
+
+RageLeft:AddSlider('FovRadius', {
+    Text = 'FOV Radius',
+    Default = 100,
+    Min = 10,
+    Max = 1500,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().FovRadius = Value
+        updateFovCircle()
+    end
+})
+
+RageLeft:AddToggle('NoFovLimit', {
+    Text = 'No FOV Limit',
+    Default = false,
+    Callback = function(Value)
+        getgenv().NoFovLimit = Value
+    end
+})
+
+local fovCircle = Drawing.new("Circle")
+fovCircle.Visible = false
+fovCircle.Color = Color3.fromRGB(255, 255, 255)
+fovCircle.Thickness = 1
+fovCircle.Transparency = 1
+fovCircle.Filled = false
+
+function updateFovCircle()
+    if getgenv().FovEnabled then
+        fovCircle.Radius = getgenv().FovRadius
+        fovCircle.Position = Vector2.new(workspace.CurrentCamera.ViewportSize.X / 2, workspace.CurrentCamera.ViewportSize.Y / 2)
+        fovCircle.Visible = true
+    else
+        fovCircle.Visible = false
+    end
+end
+getgenv().DownedCheck = false
+
+RageLeft:AddToggle('DownedCheck', {
+    Text = 'Downed Check',
+    Default = true,
+    Callback = function(Value)
+        getgenv().DownedCheck = Value
+    end
+})
+
+function isPlayerDowned(player)
+    if not getgenv().DownedCheck then return false end
+    if not player.Character then return true end
+    
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    if not humanoid then return true end
+    
+    local head = player.Character:FindFirstChild("Head")
+    if not head then return true end
+    
+    return humanoid.Health <= 0
+end
+function getClosest()
+    if getgenv().TargetLock and getgenv().LockedTarget and getgenv().LockedTarget.Character then
+        local head = getgenv().LockedTarget.Character:FindFirstChild("Head")
+        local h = getgenv().LockedTarget.Character:FindFirstChild("Humanoid")
+        if head and h and h.Health > 0 and canSeeTarget(head) and not isPlayerDowned(getgenv().LockedTarget) then
+            return head
+        end
+    end
+
+    local closest = nil
+    local shortest = math.huge
+    local camera = workspace.CurrentCamera
+
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and not isPlayerDowned(p) then
+            local h = p.Character:FindFirstChild("Humanoid")
+            local head = p.Character:FindFirstChild("Head")
+            if h and h.Health > 0 and head and canSeeTarget(head) then
+
+                if not getgenv().NoFovLimit and getgenv().FovEnabled then
+                    local screenPoint, onScreen = camera:WorldToViewportPoint(head.Position)
+                    if onScreen then
+                        local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+                        local mousePos = Vector2.new(screenPoint.X, screenPoint.Y)
+                        local distance = (mousePos - center).Magnitude
+                        
+                        if distance > getgenv().FovRadius then
+                            continue
+                        end
+                    else
+                        continue
+                    end
+                end
+
+                local ignore = false
+                if not getgenv().TargetLock and #getgenv().Whitelist > 0 then
+                    for _, name in ipairs(getgenv().Whitelist) do
+                        if p.Name == name then
+                            ignore = true
+                            break
+                        end
+                    end
+                end
+                if ignore then continue end
+
+                local validTarget = true
+                if #getgenv().TargetList > 0 then
+                    validTarget = false
+                    for _, name in ipairs(getgenv().TargetList) do
+                        if p.Name == name then
+                            validTarget = true
+                            break
+                        end
+                    end
+                end
+
+                if validTarget then
+                    local dist = (head.Position - camera.CFrame.Position).Magnitude
+                    if dist < shortest then
+                        shortest = dist
+                        closest = head
+                        if getgenv().TargetLock then
+                            getgenv().LockedTarget = p
+                        end
+                    end
+                end
             end
         end
     end
 
     return closest
 end
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    updateFovCircle()
+end)
+
+updateFovCircle()
 function updatePlayerLists()
     local playerNames = {}
     for _, player in pairs(Players:GetPlayers()) do
@@ -599,6 +749,7 @@ function getCurrentTool()
     end
     return nil
 end
+
 function createTracer(startPos, endPos)
     if not getgenv().TracerEnabled then return end
 
