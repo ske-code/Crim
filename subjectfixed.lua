@@ -1,4 +1,93 @@
 local Players = game:GetService("Players")
+local Library = {}
+Library.Open = true
+Library.Accent = Color3.fromRGB(85, 170, 255)
+Library.ScreenGUI = Instance.new("ScreenGui", game:GetService("CoreGui"))
+Library.UIFont = Font.new("rbxassetid://12187371840")
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local Stats = {}
+do
+    local lastTime = tick()
+    local frameCount = 0
+    RunService.RenderStepped:Connect(function()
+        frameCount += 1
+        local now = tick()
+        if now - lastTime >= 1 then
+            Stats.FPS = frameCount
+            frameCount = 0
+            lastTime = now
+        end
+    end)
+end
+
+function Stats:GetPing()
+    return math.floor(LocalPlayer:GetNetworkPing() * 1000)
+end
+
+local ClientID = "Client-" .. LocalPlayer.UserId
+
+function Library:Watermark(Properties)
+    local Watermark = { Name = Properties.Name or "ske.gg" }
+
+    local Outline = Instance.new("Frame", Library.ScreenGUI)
+    Outline.Name = "Outline"
+    Outline.AutomaticSize = Enum.AutomaticSize.X
+    Outline.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    Outline.Position = UDim2.new(0.01, 0, 0.02, 0)
+    Outline.Size = UDim2.new(0, 0, 0, 18)
+    Outline.Visible = true
+
+    local Inline = Instance.new("Frame", Outline)
+    Inline.Name = "Inline"
+    Inline.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Inline.Position = UDim2.new(0, 1, 0, 1)
+    Inline.Size = UDim2.new(1, -2, 1, -2)
+
+    local Value = Instance.new("TextLabel", Inline)
+    Value.Name = "Value"
+    Value.FontFace = Library.UIFont
+    Value.Text = Watermark.Name
+    Value.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Value.TextSize = 14
+    Value.TextXAlignment = Enum.TextXAlignment.Left
+    Value.AutomaticSize = Enum.AutomaticSize.X
+    Value.BackgroundTransparency = 1
+    Value.Size = UDim2.new(0, 0, 1, 0)
+
+    local UIPadding = Instance.new("UIPadding", Value)
+    UIPadding.PaddingLeft = UDim.new(0, 5)
+    UIPadding.PaddingRight = UDim.new(0, 5)
+    UIPadding.PaddingTop = UDim.new(0, 1)
+
+    local Accent = Instance.new("Frame", Outline)
+    Accent.Name = "Accent"
+    Accent.BackgroundColor3 = Library.Accent
+    Accent.Size = UDim2.new(1, 0, 0, 1)
+
+    RunService.RenderStepped:Connect(function()
+        Value.Text = string.format(
+            "%s | fps: %d | ping: %d ms | client: %s",
+            Watermark.Name,
+            Stats.FPS or 0,
+            Stats:GetPing(),
+            ClientID
+        )
+    end)
+
+    function Watermark:SetVisible(State)
+        Outline.Visible = State
+    end
+
+    return Watermark
+end
+
+local MyWatermark = Library:Watermark({ Name = "ske.gg" })
+MyWatermark:SetVisible(true)
+
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
