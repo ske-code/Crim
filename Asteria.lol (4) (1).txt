@@ -458,8 +458,6 @@ LeftGroupBox:AddDropdown("MyDropdown", {
 	end,
 })
 
-Options.MyDropdown:SetValue("Head")
-
 LeftGroupBox:AddSlider("Fovaim", {
 	Text = "Aimbot fov",
 	Default = 180,
