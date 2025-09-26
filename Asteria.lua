@@ -513,8 +513,6 @@ LeftGroupBox:AddDropdown("MyDropdown", {
 	end,
 })
 
-Options.MyDropdown:SetValue("Head")
-
 LeftGroupBox:AddToggle("Jump", {
 	Text = "Jump toggle ",
 	Default = false, -- Default value (true / false)
