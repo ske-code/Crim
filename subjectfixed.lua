@@ -1896,3 +1896,83 @@ end)
 if LocalPlayer.Character and getgenv().ForceFieldToolEnabled then
     applyForceFieldToTools()
 end
+getgenv().AutoLockpick = false
+
+PlayerLeft:AddToggle("AutoLockpick", {
+    Text = "Auto Lockpick",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoLockpick = Value
+        if Value then
+            startAutoLockpick()
+        end
+    end
+})
+
+function lockpick()
+    for i, v in getgc() do
+        if type(v) == "function" and debug.info(v, "n") == "Complete" then
+            return v
+        end
+    end
+end
+
+function findLockpickObject()
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name == "LockpickObject" or obj:FindFirstChild("LockpickGUI") then
+            return obj
+        end
+    end
+    return nil
+end
+
+function isNearLockpickObject()
+    if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then
+        return false
+    end
+    
+    local lockpickObj = findLockpickObject()
+    if not lockpickObj then return false end
+    
+    local distance = (plr.Character.HumanoidRootPart.Position - lockpickObj.Position).Magnitude
+    return distance <= 10
+end
+
+function startAutoLockpick()
+    task.spawn(function()
+        while getgenv().AutoLockpick do
+            task.wait(0.5)
+            
+            if isNearLockpickObject() and not plr.PlayerGui:FindFirstChild("LockpickGUI") then
+                firetouchinterest(plr.Character.HumanoidRootPart, findLockpickObject(), 0)
+                task.wait(0.1)
+                firetouchinterest(plr.Character.HumanoidRootPart, findLockpickObject(), 1)
+                
+                local startTime = tick()
+                while tick() - startTime < 3 and getgenv().AutoLockpick do
+                    if plr.PlayerGui:FindFirstChild("LockpickGUI") then
+                        task.wait(0.15)
+                        local compl = lockpick()
+                        if compl then
+                            compl()
+                        end
+                        break
+                    end
+                    task.wait(0.1)
+                end
+            end
+        end
+    end)
+end
+
+task.spawn(function()
+    plr.PlayerGui.ChildAdded:Connect(function(child)
+        if child.Name == "LockpickGUI" and getgenv().AutoLockpick then
+            task.wait(0.15)
+            local compl = lockpick()
+            if compl then
+                compl()
+            end
+        end
+    end)
+end)
