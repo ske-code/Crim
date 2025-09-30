@@ -829,3 +829,173 @@ end
 local MyWatermark = Library:Watermark({ Name = "ske.gg" })
 MyWatermark:SetVisible(true)
 warn("ske.gg loaded")
+local ConfigSystem = {
+    CurrentConfig = "default",
+    Configs = {},
+    AutoLoad = false
+}
+
+local function SaveConfig(name)
+    if not name or name == "" then name = "default" end
+    
+    local configData = {
+        Rage = S.Rage,
+        Visual = S.Visual, 
+        Player = S.Player
+    }
+    
+    if writefile then
+        writefile("ske_gg_" .. name .. ".json", game:GetService("HttpService"):JSONEncode(configData))
+        warn("Config saved: " .. name)
+    end
+end
+
+local function LoadConfig(name)
+    if not name or name == "" then name = "default" end
+    
+    if readfile then
+        local success, data = pcall(function()
+            return readfile("ske_gg_" .. name .. ".json")
+        end)
+        
+        if success then
+            local configData = game:GetService("HttpService"):JSONDecode(data)
+            
+            S.Rage = configData.Rage or S.Rage
+            S.Visual = configData.Visual or S.Visual
+            S.Player = configData.Player or S.Player
+            
+            if S.Player.NoEquipTime then
+                applyNoEquipTime()
+            else
+                restoreEquipTime()
+            end
+            
+            if S.Visual.Headless then applyHeadless() end
+            if S.Visual.ForceField then applyForceField() end
+            if S.Visual.ToolForceField then applyToolForceField() else restoreTools() end
+            if S.Visual.Shader then updateShader() end
+            
+            warn("Config loaded: " .. name)
+        else
+            warn("Config not found: " .. name)
+        end
+    end
+end
+
+local function DeleteConfig(name)
+    if not name or name == "" then name = "default" end
+    
+    if delfile then
+        local success = pcall(function()
+            delfile("ske_gg_" .. name .. ".json")
+        end)
+        
+        if success then
+            warn("Config deleted: " .. name)
+            UpdateConfigList()
+        else
+            warn("Config not found: " .. name)
+        end
+    end
+end
+
+local function UpdateConfigList()
+    if listfiles then
+        ConfigSystem.Configs = {}
+        local success, files = pcall(function()
+            return listfiles("")
+        end)
+        
+        if success then
+            for _, file in ipairs(files) do
+                if string.find(file, "ske_gg_") then
+                    local configName = string.gsub(file, "ske_gg_", "")
+                    configName = string.gsub(configName, ".json", "")
+                    table.insert(ConfigSystem.Configs, configName)
+                end
+            end
+        end
+    end
+end
+
+local configSection = uiSettingsTab:AddLeftGroupbox('Configuration')
+
+configSection:AddLabel("Config Management")
+
+local configNameInput = configSection:Textbox({
+    Text = "default",
+    Placeholder = "Config Name",
+    Flag = "ConfigName",
+    Callback = function(text)
+        ConfigSystem.CurrentConfig = text
+    end
+})
+
+configSection:Button({
+    Text = "Save Config",
+    Func = function()
+        SaveConfig(ConfigSystem.CurrentConfig)
+        UpdateConfigList()
+    end
+})
+
+configSection:Button({
+    Text = "Load Config",
+    Func = function()
+        LoadConfig(ConfigSystem.CurrentConfig)
+    end
+})
+
+configSection:Button({
+    Text = "Delete Config",
+    Func = function()
+        DeleteConfig(ConfigSystem.CurrentConfig)
+    end
+})
+
+configSection:AddLabel("Available Configs:")
+
+local configLabels = {}
+
+local function RefreshConfigDisplay()
+    for _, label in ipairs(configLabels) do
+        label:Remove()
+    end
+    configLabels = {}
+    
+    for i, configName in ipairs(ConfigSystem.Configs) do
+        local label = configSection:AddLabel(configName)
+        table.insert(configLabels, label)
+    end
+end
+
+configSection:Button({
+    Text = "Refresh List",
+    Func = function()
+        UpdateConfigList()
+        RefreshConfigDisplay()
+    end
+})
+
+configSection:Checkbox({
+    Text = "Auto Load",
+    Default = false,
+    Flag = "AutoLoad",
+    Callback = function(state)
+        ConfigSystem.AutoLoad = state
+        if state then
+            LoadConfig("default")
+        end
+    end
+})
+
+task.spawn(function()
+    wait(1)
+    UpdateConfigList()
+    RefreshConfigDisplay()
+    
+    if ConfigSystem.AutoLoad then
+        LoadConfig("default")
+    end
+end)
