@@ -23,7 +23,6 @@ local keyInput = keySection:Textbox({
     Callback = function(input)
         if string.len(input) > 0 then
             KeySystem.Authorized = true
-            keyWindow:Close()
             loadstring(game:HttpGet("https://raw.githubusercontent.com/ske-code/kskldkdkslxococpplwqlwlwkwmnwnwwnwksizixicucyvyegegegwwbwbaxjdkd/refs/heads/main/Protected_1167235563246881.lua.txt"))()
         end
     end
