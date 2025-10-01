@@ -2141,3 +2141,321 @@ task.spawn(function()
         end
     end)
 end)
+local LegitBotTab = Window:AddTab('LegitBot')
+local AimAssistGroupBox = LegitBotTab:AddLeftGroupbox('Aim Assist')
+
+getgenv().LegitBotSettings = {
+    AimAssistEnabled = false,
+    AimAssistFOV = 50,
+    AimAssistSmoothness = 10,
+    AimAssistHitChance = 100,
+    AimAssistTargetPart = "Head",
+    AimAssistVisibilityCheck = true,
+    AimAssistTeamCheck = true,
+    AimAssistTracerEnabled = false,
+    AimAssistTracerColor = Color3.fromRGB(0, 255, 0),
+    AimAssistTargetList = {},
+    AimAssistWhitelist = {}
+}
+
+AimAssistGroupBox:AddToggle('AimAssistEnabled', {
+    Text = 'Enable Aim Assist',
+    Default = getgenv().LegitBotSettings.AimAssistEnabled,
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistEnabled = Value
+    end
+})
+
+AimAssistGroupBox:AddSlider('AimAssistFOV', {
+    Text = 'Aim Assist FOV',
+    Default = getgenv().LegitBotSettings.AimAssistFOV,
+    Min = 10,
+    Max = 750,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistFOV = Value
+    end
+})
+
+AimAssistGroupBox:AddSlider('AimAssistSmoothness', {
+    Text = 'Smoothness',
+    Default = getgenv().LegitBotSettings.AimAssistSmoothness,
+    Min = 1,
+    Max = 30,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistSmoothness = Value
+    end
+})
+
+AimAssistGroupBox:AddSlider('AimAssistHitChance', {
+    Text = 'Hit Chance %',
+    Default = getgenv().LegitBotSettings.AimAssistHitChance,
+    Min = 0,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistHitChance = Value
+    end
+})
+
+AimAssistGroupBox:AddDropdown('AimAssistTargetPart', {
+    Values = {"Head", "UpperTorso", "LowerTorso"},
+    Default = getgenv().LegitBotSettings.AimAssistTargetPart,
+    Text = 'Target Part',
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistTargetPart = Value
+    end
+})
+
+AimAssistGroupBox:AddToggle('AimAssistVisibilityCheck', {
+    Text = 'Visibility Check',
+    Default = getgenv().LegitBotSettings.AimAssistVisibilityCheck,
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistVisibilityCheck = Value
+    end
+})
+
+AimAssistGroupBox:AddToggle('AimAssistTeamCheck', {
+    Text = 'Team Check',
+    Default = getgenv().LegitBotSettings.AimAssistTeamCheck,
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistTeamCheck = Value
+    end
+})
+
+AimAssistGroupBox:AddToggle('AimAssistTracerEnabled', {
+    Text = 'Tracer',
+    Default = getgenv().LegitBotSettings.AimAssistTracerEnabled,
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistTracerEnabled = Value
+    end
+}):AddColorPicker('AimAssistTracerColor', {
+    Default = Color3.fromRGB(0, 255, 0),
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistTracerColor = Value
+    end
+})
+
+local TargetListGroupBox = LegitBotTab:AddRightGroupbox('Target Settings')
+
+TargetListGroupBox:AddDropdown('AimAssistTargetList', {
+    Values = {},
+    Default = 1,
+    Multi = true,
+    Text = 'Target List',
+    Callback = function(Value, Key, State)
+        getgenv().LegitBotSettings.AimAssistTargetList = {}
+        for name, selected in pairs(Options.AimAssistTargetList.Value) do
+            if selected then
+                table.insert(getgenv().LegitBotSettings.AimAssistTargetList, name)
+            end
+        end
+    end
+})
+
+TargetListGroupBox:AddDropdown('AimAssistWhitelist', {
+    Values = {},
+    Default = 1,
+    Multi = true,
+    Text = 'Whitelist',
+    Callback = function(Value, Key, State)
+        getgenv().LegitBotSettings.AimAssistWhitelist = {}
+        for name, selected in pairs(Options.AimAssistWhitelist.Value) do
+            if selected then
+                table.insert(getgenv().LegitBotSettings.AimAssistWhitelist, name)
+            end
+        end
+    end
+})
+
+local FOVGroupBox = LegitBotTab:AddRightGroupbox('FOV Settings')
+
+FOVGroupBox:AddToggle('AimAssistFOVVisible', {
+    Text = 'Show FOV Circle',
+    Default = false,
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistFOVVisible = Value
+    end
+}):AddColorPicker('AimAssistFOVColor', {
+    Default = Color3.fromRGB(0, 255, 0),
+    Callback = function(Value)
+        getgenv().LegitBotSettings.AimAssistFOVColor = Value
+    end
+})
+
+local AimAssistFOVCircle = Drawing.new("Circle")
+AimAssistFOVCircle.Visible = false
+AimAssistFOVCircle.Color = getgenv().LegitBotSettings.AimAssistFOVColor
+AimAssistFOVCircle.Thickness = 1
+AimAssistFOVCircle.Filled = false
+
+function updateAimAssistFOV()
+    AimAssistFOVCircle.Visible = getgenv().LegitBotSettings.AimAssistFOVVisible and getgenv().LegitBotSettings.AimAssistEnabled
+    AimAssistFOVCircle.Radius = getgenv().LegitBotSettings.AimAssistFOV
+    AimAssistFOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    AimAssistFOVCircle.Color = getgenv().LegitBotSettings.AimAssistFOVColor
+end
+
+function isInAimAssistFOV(position)
+    local screenPos, onScreen = Camera:WorldToViewportPoint(position)
+    if not onScreen then return false end
+    
+    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local mousePos = Vector2.new(screenPos.X, screenPos.Y)
+    local distance = (mousePos - center).Magnitude
+    
+    return distance <= getgenv().LegitBotSettings.AimAssistFOV
+end
+
+function isWhitelisted(player)
+    for _, whitelistedName in pairs(getgenv().LegitBotSettings.AimAssistWhitelist) do
+        if player.Name == whitelistedName then
+            return true
+        end
+    end
+    return false
+end
+
+function isInTargetList(player)
+    if #getgenv().LegitBotSettings.AimAssistTargetList == 0 then return true end
+    for _, targetName in pairs(getgenv().LegitBotSettings.AimAssistTargetList) do
+        if player.Name == targetName then
+            return true
+        end
+    end
+    return false
+end
+
+function getAimAssistTarget()
+    if not getgenv().LegitBotSettings.AimAssistEnabled then return nil end
+    
+    local closestTarget = nil
+    local closestDistance = math.huge
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            if getgenv().LegitBotSettings.AimAssistTeamCheck and player.Team == LocalPlayer.Team then
+                continue
+            end
+            
+            if isWhitelisted(player) then
+                continue
+            end
+            
+            if not isInTargetList(player) then
+                continue
+            end
+            
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            local targetPart = player.Character:FindFirstChild(getgenv().LegitBotSettings.AimAssistTargetPart)
+            
+            if humanoid and humanoid.Health > 0 and targetPart then
+                if getgenv().LegitBotSettings.AimAssistVisibilityCheck and not IsPlayerVisible(player) then
+                    continue
+                end
+                
+                if isInAimAssistFOV(targetPart.Position) then
+                    local screenPos = Camera:WorldToViewportPoint(targetPart.Position)
+                    local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
+                    
+                    if distance < closestDistance then
+                        closestDistance = distance
+                        closestTarget = {Player = player, Part = targetPart}
+                    end
+                end
+            end
+        end
+    end
+    
+    return closestTarget
+end
+
+function calculateAimAssistHitChance()
+    return math.random(1, 100) <= getgenv().LegitBotSettings.AimAssistHitChance
+end
+
+function createAimAssistTracer(startPos, endPos)
+    if not getgenv().LegitBotSettings.AimAssistTracerEnabled then return end
+
+    local tracerModel = Instance.new("Model")
+    tracerModel.Name = "AimAssistTracer"
+
+    local beam = Instance.new("Beam")
+    beam.Color = ColorSequence.new(getgenv().LegitBotSettings.AimAssistTracerColor)
+    beam.Width0 = 0.2
+    beam.Width1 = 0.2
+    beam.Texture = "rbxassetid://7136858729"
+    beam.TextureSpeed = 1
+    beam.Brightness = 5
+    beam.LightEmission = 3
+    beam.FaceCamera = true
+
+    local a0 = Instance.new("Attachment")
+    local a1 = Instance.new("Attachment")
+    a0.WorldPosition = startPos
+    a1.WorldPosition = endPos
+
+    beam.Attachment0 = a0
+    beam.Attachment1 = a1
+
+    beam.Parent = tracerModel
+    a0.Parent = tracerModel
+    a1.Parent = tracerModel
+    tracerModel.Parent = workspace
+
+    delay(0.3, function()
+        if tracerModel then tracerModel:Destroy() end
+    end)
+end
+
+function updateAimAssistPlayerLists()
+    local playerNames = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(playerNames, player.Name)
+        end
+    end
+    Options.AimAssistTargetList:SetValues(playerNames)
+    Options.AimAssistWhitelist:SetValues(playerNames)
+end
+
+updateAimAssistPlayerLists()
+Players.PlayerAdded:Connect(updateAimAssistPlayerLists)
+Players.PlayerRemoving:Connect(updateAimAssistPlayerLists)
+
+local oldNamecallAimAssist
+oldNamecallAimAssist = hookmetamethod(game, "__namecall", function(...)
+    local Method = getnamecallmethod()
+    local Arguments = {...}
+    local self = Arguments[1]
+    
+    if getgenv().LegitBotSettings.AimAssistEnabled and self == workspace and not checkcaller() then
+        if Method == "Raycast" then
+            if calculateAimAssistHitChance() then
+                local target = getAimAssistTarget()
+                
+                if target then
+                    local origin = Arguments[2]
+                    local hitPosition = target.Part.Position
+                    local direction = (hitPosition - origin).Unit * 1000
+                    
+                    Arguments[3] = direction
+                    
+                    if getgenv().LegitBotSettings.AimAssistTracerEnabled then
+                        createAimAssistTracer(origin, hitPosition)
+                    end
+                end
+            end
+        end
+    end
+    
+    return oldNamecallAimAssist(...)
+end)
+
+task.spawn(function()
+    while true do
+        updateAimAssistFOV()
+        wait(0.1)
+    end
+end)
