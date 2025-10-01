@@ -506,7 +506,7 @@ local function shoot(head)
     end
     
     local localHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
-    local shootPosition = localHead and (localHead.Position - Vector3.new(0, 20, 0)) or Camera.CFrame.Position
+    local shootPosition = localHead and (localHead.Position + Vector3.new(0, 20, 0))
     local VisualPosition = Camera.CFrame.Position
     local randomKey = RandomString(30) .. "0"
     local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, false}
