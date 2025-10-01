@@ -883,7 +883,82 @@ function createTracer(startPos, endPos)
 
     return tracerModel
 end
-function shoot(head)
+getgenv().SmartWallbang = false
+getgenv().WallbangHeight = 5
+getgenv().WallbangDistance = 10
+
+RageLeft:AddToggle('SmartWallbang', {
+    Text = 'Wallbang',
+    Default = false,
+    Callback = function(Value)
+        getgenv().SmartWallbang = Value
+    end
+})
+
+RageLeft:AddSlider('WallbangHeight', {
+    Text = 'Wallbang Height',
+    Default = 5,
+    Min = 0,
+    Max = 20,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().WallbangHeight = Value
+    end
+})
+
+RageLeft:AddSlider('WallbangDistance', {
+    Text = 'Wallbang Distance',
+    Default = 10,
+    Min = 0,
+    Max = 50,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().WallbangDistance = Value
+    end
+})
+
+local function calculateSmartWallbang()
+    if not getgenv().SmartWallbang then
+        local localHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+        return localHead and (localHead.Position + Vector3.new(0, 10, 0)) or Camera.CFrame.Position
+    end
+    
+    local localHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+    if not localHead then
+        return Camera.CFrame.Position
+    end
+    
+    local headPosition = localHead.Position
+    local headCFrame = localHead.CFrame
+    
+
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    
+    local raycastResult = workspace:Raycast(headPosition, headCFrame.LookVector * 100, raycastParams)
+    
+    if raycastResult then
+        local hitPosition = raycastResult.Position
+        local hitPart = raycastResult.Instance
+        
+        
+        local wallbangHeight = hitPosition.Y + getgenv().WallbangHeight
+        
+        
+        local wallbangPosition = Vector3.new(
+            hitPosition.X + (headCFrame.LookVector.X * getgenv().WallbangDistance),
+            wallbangHeight,
+            hitPosition.Z + (headCFrame.LookVector.Z * getgenv().WallbangDistance)
+        )
+        
+        return wallbangPosition
+    else
+        return headPosition + Vector3.new(0, getgenv().WallbangHeight, 0) + (headCFrame.LookVector * getgenv().WallbangDistance)
+    end
+end
+
+local function shoot(head)
     local tool = getCurrentTool()
     if not tool then return end
     
@@ -895,24 +970,25 @@ function shoot(head)
     local storedAmmo = values:FindFirstChild("SERVER_StoredAmmo")
     if not ammo or not storedAmmo then return end
     
+    if ammo.Value <= 0 then return end
     
-    if not getgenv().InfAmmo and ammo.Value <= 0 then return end
-    
+    local shootPosition = calculateSmartWallbang()
     local hitPosition = head.Position
-    local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+    local hitDirection = (hitPosition - shootPosition).Unit
     
     if getgenv().Prediction then
         local velocity = head.Velocity or Vector3.zero
         hitPosition = hitPosition + velocity * getgenv().PredictionAmount
-        hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+        hitDirection = (hitPosition - shootPosition).Unit
     end
     
-    local shootPosition = Camera.CFrame.Position
-    
-    
+    local VisualPosition = Camera.CFrame.Position
     local randomKey = RandomString(30) .. "0"
     local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, false}
     local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
+    
+    local GNX_S = ReplicatedStorage:WaitForChild("Events"):WaitForChild("GNX_S")
+    local ZFKLF__H = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ZFKLF__H")
     
     GNX_S:FireServer(unpack(args1))
     ZFKLF__H:FireServer(unpack(args2))
@@ -921,14 +997,14 @@ function shoot(head)
     hitMarker:Fire(head)
     storedAmmo.Value = storedAmmo.Value
     
-    createTracer(shootPosition, hitPosition)
+    createTracer(VisualPosition, hitPosition)
     playHitSound()
     
     local player = Players:GetPlayerFromCharacter(head.Parent)
     if player then
         local humanoid = head.Parent:FindFirstChildOfClass("Humanoid")
         showHitNotify(player.Name, 1, head, humanoid, hitPosition, tool)
-	end
+    end
 end
 getgenv().NoFireRateLimit = false
 
