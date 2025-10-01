@@ -499,14 +499,15 @@ local function shoot(head)
     local hitPosition = head.Position
     local hitDirection = (hitPosition - Camera.CFrame.Position).Unit
     
-    if S.Rage.Prediction then
+    if getgenv().Prediction then
         local velocity = head.Velocity or Vector3.zero
-        hitPosition = hitPosition + velocity * S.Rage.PredictionAmount
+        hitPosition = hitPosition + velocity * getgenv().PredictionAmount
         hitDirection = (hitPosition - Camera.CFrame.Position).Unit
     end
     
-    local shootPosition = Camera.CFrame.Position
-    
+    local localHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+    local shootPosition = localHead and (localHead.Position - Vector3.new(0, 20, 0)) or Camera.CFrame.Position
+    local VisualPosition = Camera.CFrame.Position
     local randomKey = RandomString(30) .. "0"
     local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, false}
     local args2 = {"🧈", tool, randomKey, 1, head, hitPosition, hitDirection}
@@ -521,7 +522,7 @@ local function shoot(head)
     hitMarker:Fire(head)
     storedAmmo.Value = storedAmmo.Value
     
-    createTracer(shootPosition, hitPosition)
+    createTracer(VisualPosition, hitPosition)
     playHitSound()
     
     local player = Players:GetPlayerFromCharacter(head.Parent)
@@ -530,7 +531,6 @@ local function shoot(head)
         showHitNotify(player.Name, 1, head, humanoid, hitPosition, tool)
     end
 end
-
 local function setupPlayerFunctions()
     local function findModule()
         for i, v in pairs(game:GetService("StarterPlayer").StarterPlayerScripts:GetDescendants()) do
