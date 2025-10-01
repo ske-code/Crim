@@ -495,17 +495,18 @@ local function shoot(head)
     if not ammo or not storedAmmo then return end
     
     if ammo.Value <= 0 then return end
-    local shootPosition = localHead and (localHead.Position + Vector3.new(0, 5, 0))
+    
+    local localHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+    local shootPosition = localHead and (localHead.Position + Vector3.new(0, 10, 0)) or Camera.CFrame.Position
     local hitPosition = head.Position
     local hitDirection = (hitPosition - shootPosition).Unit
     
     if getgenv().Prediction then
         local velocity = head.Velocity or Vector3.zero
         hitPosition = hitPosition + velocity * getgenv().PredictionAmount
-        hitDirection = (hitPosition - Camera.CFrame.Position).Unit
+        hitDirection = (hitPosition - shootPosition).Unit
     end
     
-    local localHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
     local VisualPosition = Camera.CFrame.Position
     local randomKey = RandomString(30) .. "0"
     local args1 = {tick(), randomKey, tool, "FDS9I83", shootPosition, {hitDirection}, false}
