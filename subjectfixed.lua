@@ -2281,25 +2281,25 @@ function createESP(player)
     esp.HealthText.Size = 13
     esp.HealthText.Outline = true
     esp.HealthText.Center = true
-    esp.HealthText.Font = Font.new("rbxassetid://12187371840")
+    esp.HealthText.Font = 3
     
     esp.Name.Visible = false
     esp.Name.Size = 14
     esp.Name.Outline = true
     esp.Name.Center = true
-    esp.Name.Font = Font.new("rbxassetid://12187371840")
+    esp.Name.Font = 3
     
     esp.Tool.Visible = false
     esp.Tool.Size = 12
     esp.Tool.Outline = true
     esp.Tool.Center = true
-    esp.Tool.Font = Font.new("rbxassetid://12187371840")
+    esp.Tool.Font = 3
     
     esp.Distance.Visible = false
     esp.Distance.Size = 12
     esp.Distance.Outline = true
     esp.Distance.Center = true
-    esp.Distance.Font = Font.new("rbxassetid://12187371840")
+    esp.Distance.Font = 3
     
     esp.Tracer.Visible = false
     esp.Tracer.Thickness = 1
