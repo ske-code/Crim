@@ -2531,7 +2531,9 @@ local Tb = {
 }
 
 local LegitLeft = Tb.Legitbot:AddLeftGroupbox('Aim Assist')
-local LegitRight = Tb.Legitbot:AddRightGroupbox('Gun Modifications')
+local LegitRight = Tb.Legitbot:AddRightGroupbox('Gun Modifications')   
+local LegitTargetList = Tb.Legitbot:AddLeftGroupbox('Target Settings')
+local LegitExtra = Tb.Legitbot:AddRightGroupbox('Extra Settings')
 
 getgenv().AimAssistEnabled = false
 getgenv().AimSmoothness = 20
@@ -2543,6 +2545,11 @@ getgenv().LegitTracerEnabled = false
 getgenv().LegitTracerColor = Color3.fromRGB(255, 0, 0)
 getgenv().LegitTracerWidth = 0.3
 getgenv().LegitTracerLifetime = 0.3
+getgenv().LegitVisibilityCheck = true
+getgenv().LegitTargetLock = false
+getgenv().LegitLockedTarget = nil
+getgenv().LegitWhitelist = {}
+getgenv().LegitTargetList = {}
 
 LegitLeft:AddToggle('AimAssistEnabled', {
     Text = 'Aim Assist',
@@ -2557,7 +2564,7 @@ LegitLeft:AddSlider('AimFOV', {
     Text = 'Aim FOV',
     Default = 50,
     Min = 10,
-    Max = 500,
+    Max = 1000,
     Rounding = 0,
     Callback = function(Value)
         getgenv().AimFOV = Value
@@ -2628,63 +2635,144 @@ LegitRight:AddToggle('LegitTracerEnabled', {
     Callback = function(Value)
         getgenv().LegitTracerEnabled = Value
     end
-}):AddColorPicker('LegitTracerColor', {
-    Default = Color3.fromRGB(255, 0, 0),
+})
+
+LegitTargetList:AddToggle('LegitVisibilityCheck', {
+    Text = 'Visibility Check',
+    Default = true,
     Callback = function(Value)
-        getgenv().LegitTracerColor = Value
+        getgenv().LegitVisibilityCheck = Value
     end
 })
 
-LegitRight:AddSlider('LegitTracerWidth', {
-    Text = 'Tracer Width',
-    Default = 0.3,
-    Min = 0.1,
-    Max = 2,
-    Rounding = 1,
+LegitTargetList:AddToggle('LegitTargetLock', {
+    Text = 'Target Lock',
+    Default = false,
     Callback = function(Value)
-        getgenv().LegitTracerWidth = Value
+        getgenv().LegitTargetLock = Value
+        if not Value then
+            getgenv().LegitLockedTarget = nil
+        end
     end
 })
 
-LegitRight:AddSlider('LegitTracerLifetime', {
-    Text = 'Tracer Lifetime',
-    Default = 0.3,
-    Min = 0.1,
-    Max = 5,
-    Rounding = 1,
-    Callback = function(Value)
-        getgenv().LegitTracerLifetime = Value
+LegitTargetList:AddDropdown('LegitTargetList', {
+    Values = {},
+    Default = 1,
+    Multi = true,
+    Text = 'Target List',
+    Callback = function(Value, Key, State)
+        getgenv().LegitTargetList = {}
+        for name, selected in pairs(Options.LegitTargetList.Value) do
+            if selected then
+                table.insert(getgenv().LegitTargetList, name)
+            end
+        end
     end
 })
+
+LegitExtra:AddDropdown('LegitWhitelist', {
+    Values = {},
+    Default = 1,
+    Multi = true,
+    Text = 'Whitelist',
+    Callback = function(Value, Key, State)
+        getgenv().LegitWhitelist = {}
+        for name, selected in pairs(Options.LegitWhitelist.Value) do
+            if selected then
+                table.insert(getgenv().LegitWhitelist, name)
+            end
+        end
+    end
+})
+
+local function updateLegitPlayerLists()
+    local playerNames = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(playerNames, player.Name)
+        end
+    end
+    Options.LegitWhitelist:SetValues(playerNames)
+    Options.LegitTargetList:SetValues(playerNames)
+end
+
+updateLegitPlayerLists()
+Players.PlayerAdded:Connect(updateLegitPlayerLists)
+Players.PlayerRemoving:Connect(updateLegitPlayerLists)
+
+local function isInTargetList(player)
+    if #getgenv().LegitTargetList == 0 then return true end
+    for _, targetName in pairs(getgenv().LegitTargetList) do
+        if player.Name == targetName then
+            return true
+        end
+    end
+    return false
+end
+
+local function isWhitelistedLegit(player)
+    for _, whitelistedName in pairs(getgenv().LegitWhitelist) do
+        if player.Name == whitelistedName then
+            return true
+        end
+    end
+    return false
+end
+
+local function canSeeTargetLegit(targetPart)
+    if not getgenv().LegitVisibilityCheck then return true end
+    
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    
+    local startPos = Camera.CFrame.Position
+    local endPos = targetPart.Position
+    local direction = (endPos - startPos)
+    local distance = direction.Magnitude
+    
+    local raycastResult = workspace:Raycast(startPos, direction.Unit * distance, raycastParams)
+    
+    if raycastResult then
+        local hitPart = raycastResult.Instance
+        if hitPart and hitPart.CanCollide then
+            local model = hitPart:FindFirstAncestorOfClass("Model")
+            if model then
+                local humanoid = model:FindFirstChild("Humanoid")
+                if humanoid then
+                    return true
+                end
+            end
+            return false
+        end
+    end
+    return true
+end
 
 local function getClosestPlayerLegit()
+    if getgenv().LegitTargetLock and getgenv().LegitLockedTarget and getgenv().LegitLockedTarget.Character then
+        local head = getgenv().LegitLockedTarget.Character:FindFirstChild("Head")
+        local humanoid = getgenv().LegitLockedTarget.Character:FindFirstChild("Humanoid")
+        if head and humanoid and humanoid.Health > 0 and canSeeTargetLegit(head) then
+            return getgenv().LegitLockedTarget
+        end
+    end
+
     local closestPlayer = nil
     local shortestDistance = getgenv().AimFOV
-    local localPlayer = game.Players.LocalPlayer
-    local localCharacter = localPlayer.Character
-    if not localCharacter then return nil end
-    local localHead = localCharacter:FindFirstChild("Head")
-    if not localHead then return nil end
-    
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character then
-            local character = player.Character
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid and humanoid.Health > 0 then
-                local targetPart = nil
-                if getgenv().AimHitbox == "Head" then
-                    targetPart = character:FindFirstChild("Head")
-                elseif getgenv().AimHitbox == "Torso" then
-                    targetPart = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
-                else
-                    targetPart = character:FindFirstChild("Head") or character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
-                end
-                
-                if targetPart then
-                    local distance = (localHead.Position - targetPart.Position).Magnitude
-                    if distance < shortestDistance then
-                        shortestDistance = distance
-                        closestPlayer = player
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and not isWhitelistedLegit(player) and isInTargetList(player) then
+            local humanoid = player.Character:FindFirstChild("Humanoid")
+            local head = player.Character:FindFirstChild("Head")
+            if humanoid and humanoid.Health > 0 and head and canSeeTargetLegit(head) then
+                local distance = (Camera.CFrame.Position - head.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestPlayer = player
+                    if getgenv().LegitTargetLock then
+                        getgenv().LegitLockedTarget = player
                     end
                 end
             end
@@ -2692,6 +2780,15 @@ local function getClosestPlayerLegit()
     end
     
     return closestPlayer
+end
+
+local function getRandomRainbowColor()
+    local hexColors = {
+        "#FF0000", "#FF7F00", "#FFFF00", "#00FF00", 
+        "#0000FF", "#4B0082", "#9400D3", "#FF00FF"
+    }
+    local randomHex = hexColors[math.random(1, #hexColors)]
+    return Color3.fromHex(randomHex)
 end
 
 local function createLegitTracer(startPos, endPos)
@@ -2709,17 +2806,19 @@ local function createLegitTracer(startPos, endPos)
     beam.Attachment1 = attachment1
     beam.Width0 = getgenv().LegitTracerWidth
     beam.Width1 = getgenv().LegitTracerWidth
-    beam.FaceCamera = true
-    beam.LightEmission = 1
+    beam.Texture = "rbxassetid://7136858729"
+    beam.TextureSpeed = 1
     beam.Brightness = 5
+    beam.LightEmission = 3
+    beam.FaceCamera = true
     
     local colorSequence = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
-        ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 165, 0)),
-        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255, 255, 0)),
-        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 0)),
-        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0, 0, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(128, 0, 128))
+        ColorSequenceKeypoint.new(0, getRandomRainbowColor()),
+        ColorSequenceKeypoint.new(0.2, getRandomRainbowColor()),
+        ColorSequenceKeypoint.new(0.4, getRandomRainbowColor()),
+        ColorSequenceKeypoint.new(0.6, getRandomRainbowColor()),
+        ColorSequenceKeypoint.new(0.8, getRandomRainbowColor()),
+        ColorSequenceKeypoint.new(1, getRandomRainbowColor())
     })
     beam.Color = colorSequence
     
@@ -2729,6 +2828,110 @@ local function createLegitTracer(startPos, endPos)
     tracerModel.Parent = workspace
     
     game:GetService("Debris"):AddItem(tracerModel, getgenv().LegitTracerLifetime)
+end
+
+local playerHealthHistory = {}
+
+local function monitorPlayerHealth(player)
+    if not player.Character then return end
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+    
+    if not playerHealthHistory[player] then
+        playerHealthHistory[player] = humanoid.Health
+    end
+    
+    humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+        if playerHealthHistory[player] and humanoid.Health < playerHealthHistory[player] then
+            if getgenv().LegitTracerEnabled and not isWhitelistedLegit(player) then
+                local character = LocalPlayer.Character
+                if character then
+                    local head = character:FindFirstChild("Head")
+                    if head then
+                        local startPos = head.Position + Vector3.new(5, 5, 0)
+                        local rayOrigin = Camera.CFrame.Position
+                        local rayDirection = Camera.CFrame.LookVector
+                        local raycastParams = RaycastParams.new()
+                        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+                        raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+                        local raycastResult = Workspace:Raycast(rayOrigin, rayDirection * 1000, raycastParams)
+                        local endPos = raycastResult and raycastResult.Position or (rayOrigin + rayDirection * 1000)
+                        createLegitTracer(startPos, endPos)
+                    end
+                end
+            end
+        end
+        playerHealthHistory[player] = humanoid.Health
+    end)
+end
+
+local legitToolConnection
+local function onLegitToolAdded(tool)
+    if tool:IsA("Tool") and tool:FindFirstChild("IsGun") then
+        local values = tool:FindFirstChild("Values")
+        if values then
+            for _, child in pairs(values:GetChildren()) do
+                if string.find(child.Name, "Ammo") then
+                    local lastValue = child.Value
+                    child:GetPropertyChangedSignal("Value"):Connect(function()
+                        if child.Value ~= lastValue and getgenv().LegitTracerEnabled then
+                            local closestPlayer = getClosestPlayerLegit()
+                            if closestPlayer and closestPlayer.Character and not isWhitelistedLegit(closestPlayer) then
+                                local humanoid = closestPlayer.Character:FindFirstChild("Humanoid")
+                                if humanoid and humanoid.Health > 0 then
+                                    local character = LocalPlayer.Character
+                                    if character then
+                                        local head = character:FindFirstChild("Head")
+                                        if head then
+                                            local startPos = head.Position + Vector3.new(5, 5, 0)
+                                            local rayOrigin = Camera.CFrame.Position
+                                            local rayDirection = Camera.CFrame.LookVector
+                                            local raycastParams = RaycastParams.new()
+                                            raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+                                            raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+                                            local raycastResult = Workspace:Raycast(rayOrigin, rayDirection * 1000, raycastParams)
+                                            local endPos = raycastResult and raycastResult.Position or (rayOrigin + rayDirection * 1000)
+                                            createLegitTracer(startPos, endPos)
+                                        end
+                                    end
+                                end
+                            end
+                            lastValue = child.Value
+                        end
+                    end)
+                end
+            end
+        end
+    end
+end
+
+local function setupLegitToolMonitoring()
+    if LocalPlayer.Character then
+        for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
+            onLegitToolAdded(tool)
+        end
+    end
+    
+    if legitToolConnection then legitToolConnection:Disconnect() end
+    legitToolConnection = LocalPlayer.CharacterAdded:Connect(function(character)
+        character.ChildAdded:Connect(onLegitToolAdded)
+    end)
+end
+
+local function setupHealthMonitoring()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            monitorPlayerHealth(player)
+        end
+    end
+    
+    Players.PlayerAdded:Connect(function(player)
+        if player ~= LocalPlayer then
+            player.CharacterAdded:Connect(function()
+                monitorPlayerHealth(player)
+            end)
+        end
+    end)
 end
 
 RunService.RenderStepped:Connect(function()
@@ -2754,51 +2957,5 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-local legitToolConnection
-local function onLegitToolAdded(tool)
-    if tool:IsA("Tool") and tool:FindFirstChild("IsGun") then
-        local values = tool:FindFirstChild("Values")
-        if values then
-            for _, child in pairs(values:GetChildren()) do
-                if string.find(child.Name, "Ammo") then
-                    local lastValue = child.Value
-                    child:GetPropertyChangedSignal("Value"):Connect(function()
-                        if child.Value ~= lastValue and getgenv().LegitTracerEnabled then
-                            local character = LocalPlayer.Character
-                            if character then
-                                local head = character:FindFirstChild("Head")
-                                if head then
-                                    local startPos = head.Position + Vector3.new(5, 5, 0)
-                                    local rayOrigin = Camera.CFrame.Position
-                                    local rayDirection = Camera.CFrame.LookVector
-                                    local raycastParams = RaycastParams.new()
-                                    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-                                    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
-                                    local raycastResult = Workspace:Raycast(rayOrigin, rayDirection * 1000, raycastParams)
-                                    local endPos = raycastResult and raycastResult.Position or (rayOrigin + rayDirection * 1000)
-                                    createLegitTracer(startPos, endPos)
-                                end
-                            end
-                            lastValue = child.Value
-                        end
-                    end)
-                end
-            end
-        end
-    end
-end
-
-local function setupLegitToolMonitoring()
-    if LocalPlayer.Character then
-        for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
-            onLegitToolAdded(tool)
-        end
-    end
-    
-    if legitToolConnection then legitToolConnection:Disconnect() end
-    legitToolConnection = LocalPlayer.CharacterAdded:Connect(function(character)
-        character.ChildAdded:Connect(onLegitToolAdded)
-    end)
-end
-
 setupLegitToolMonitoring()
+setupHealthMonitoring()
