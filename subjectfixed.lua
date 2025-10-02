@@ -2667,17 +2667,6 @@ LegitRight:AddSlider('LegitTracerLifetime', {
     end
 })
 
-local function isAiming()
-    if UserInputService.MouseEnabled then
-        return UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
-    elseif UserInputService.GamepadEnabled then
-        return UserInputService:IsGamepadButtonDown(Enum.UserInputType.Gamepad1, Enum.KeyCode.ButtonL2)
-    elseif UserInputService.TouchEnabled then
-        return true
-    end
-    return false
-end
-
 local function getClosestPlayerLegit()
     local closestPlayer = nil
     local shortestDistance = getgenv().AimFOV
@@ -2753,7 +2742,7 @@ local function createLegitTracer(startPos, endPos)
 end
 
 RunService.RenderStepped:Connect(function()
-    if getgenv().AimAssistEnabled and isAiming() then
+    if getgenv().AimAssistEnabled then
         local targetPlayer = getClosestPlayerLegit()
         if targetPlayer and targetPlayer.Character then
             local targetPart = nil
