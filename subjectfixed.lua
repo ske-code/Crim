@@ -2525,4 +2525,303 @@ task.spawn(function()
         updateESP()
         wait()
     end
+end) 
+local Tb = {
+    Legitbot = Window:AddTab('Legitbot'),
+}
+
+local LegitLeft = Tb.Legitbot:AddLeftGroupbox('Aim Assist')
+local LegitRight = Tb.Legitbot:AddRightGroupbox('Gun Modifications')
+
+getgenv().AimAssistEnabled = false
+getgenv().AimSmoothness = 20
+getgenv().AimFOV = 50
+getgenv().AimHitbox = "Head"
+getgenv().NoRecoilEnabled = false
+getgenv().NoEquipTimeEnabled = false
+getgenv().LegitTracerEnabled = false
+getgenv().LegitTracerColor = Color3.fromRGB(255, 0, 0)
+getgenv().LegitTracerWidth = 0.3
+getgenv().LegitTracerLifetime = 0.3
+
+LegitLeft:AddToggle('AimAssistEnabled', {
+    Text = 'Aim Assist',
+    Default = false,
+    Callback = function(Value)
+        getgenv().AimAssistEnabled = Value
+    end
+})
+
+LegitLeft:AddSlider('AimSmoothness', {
+    Text = 'Aim Smoothness',
+    Default = 20,
+    Min = 1,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().AimSmoothness = Value
+    end
+})
+
+LegitLeft:AddSlider('AimFOV', {
+    Text = 'Aim FOV',
+    Default = 50,
+    Min = 10,
+    Max = 500,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().AimFOV = Value
+    end
+})
+
+LegitLeft:AddDropdown('AimHitbox', {
+    Values = {"Head", "Torso", "Closest"},
+    Default = 1,
+    Text = 'Aim Hitbox',
+    Callback = function(Value)
+        getgenv().AimHitbox = Value
+    end
+})
+
+LegitRight:AddToggle('NoRecoilEnabled', {
+    Text = 'No Recoil',
+    Default = false,
+    Callback = function(Value)
+        getgenv().NoRecoilEnabled = Value
+        if Value then
+            local function modifyAllRecoil()
+                for i, v in pairs(getgc(true)) do
+                    if type(v) == "table" then
+                        if rawget(v, "Recoil") ~= nil then rawset(v, "Recoil", 0) end
+                        if rawget(v, "AngleX_Min") ~= nil then rawset(v, "AngleX_Min", 0) end
+                        if rawget(v, "AngleX_Max") ~= nil then rawset(v, "AngleX_Max", 0) end
+                        if rawget(v, "AngleY_Min") ~= nil then rawset(v, "AngleY_Min", 0) end
+                        if rawget(v, "AngleY_Max") ~= nil then rawset(v, "AngleY_Max", 0) end
+                        if rawget(v, "AngleZ_Min") ~= nil then rawset(v, "AngleZ_Min", 0) end
+                        if rawget(v, "AngleZ_Max") ~= nil then rawset(v, "AngleZ_Max", 0) end
+                        if rawget(v, "CameraRecoilingEnabled") ~= nil then rawset(v, "CameraRecoilingEnabled", false) end
+                        if rawget(v, "Spread") ~= nil then rawset(v, "Spread", 0) end
+                        if rawget(v, "WalkSpreadIncrease") ~= nil then rawset(v, "WalkSpreadIncrease", 1) end
+                        if rawget(v, "CrossExpansion") ~= nil then rawset(v, "CrossExpansion", 0) end
+                    end
+                end
+            end
+            modifyAllRecoil()
+        end
+    end
+})
+
+LegitRight:AddToggle('NoEquipTimeEnabled', {
+    Text = 'No Equip Time',
+    Default = false,
+    Callback = function(Value)
+        getgenv().NoEquipTimeEnabled = Value
+        if Value then
+            local gcObjects = getgc(true)
+            for i, v in pairs(gcObjects) do
+                if type(v) == "table" then
+                    if rawget(v, "EquipTime") then
+                        v.EquipTime = 0
+                    end
+                    if rawget(v, "EquipAnimSpeed") then
+                        v.EquipAnimSpeed = 999
+                    end
+                end
+            end
+        end
+    end
+})
+
+LegitRight:AddToggle('LegitTracerEnabled', {
+    Text = 'Bullet Tracer',
+    Default = false,
+    Callback = function(Value)
+        getgenv().LegitTracerEnabled = Value
+    end
+}):AddColorPicker('LegitTracerColor', {
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(Value)
+        getgenv().LegitTracerColor = Value
+    end
+})
+
+LegitRight:AddSlider('LegitTracerWidth', {
+    Text = 'Tracer Width',
+    Default = 0.3,
+    Min = 0.1,
+    Max = 2,
+    Rounding = 1,
+    Callback = function(Value)
+        getgenv().LegitTracerWidth = Value
+    end
+})
+
+LegitRight:AddSlider('LegitTracerLifetime', {
+    Text = 'Tracer Lifetime',
+    Default = 0.3,
+    Min = 0.1,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(Value)
+        getgenv().LegitTracerLifetime = Value
+    end
+})
+
+local function isAiming()
+    if UserInputService.MouseEnabled then
+        return UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+    elseif UserInputService.GamepadEnabled then
+        return UserInputService:IsGamepadButtonDown(Enum.UserInputType.Gamepad1, Enum.KeyCode.ButtonL2)
+    elseif UserInputService.TouchEnabled then
+        return true
+    end
+    return false
+end
+
+local function getClosestPlayerLegit()
+    local closestPlayer = nil
+    local shortestDistance = getgenv().AimFOV
+    local localPlayer = game.Players.LocalPlayer
+    local localCharacter = localPlayer.Character
+    if not localCharacter then return nil end
+    local localHead = localCharacter:FindFirstChild("Head")
+    if not localHead then return nil end
+    
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character then
+            local character = player.Character
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                local targetPart = nil
+                if getgenv().AimHitbox == "Head" then
+                    targetPart = character:FindFirstChild("Head")
+                elseif getgenv().AimHitbox == "Torso" then
+                    targetPart = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+                else
+                    targetPart = character:FindFirstChild("Head") or character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+                end
+                
+                if targetPart then
+                    local distance = (localHead.Position - targetPart.Position).Magnitude
+                    if distance < shortestDistance then
+                        shortestDistance = distance
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    
+    return closestPlayer
+end
+
+local function createLegitTracer(startPos, endPos)
+    if not getgenv().LegitTracerEnabled then return end
+
+    local tracerModel = Instance.new("Model")
+    local beam = Instance.new("Beam")
+    local attachment0 = Instance.new("Attachment")
+    local attachment1 = Instance.new("Attachment")
+    
+    attachment0.WorldPosition = startPos
+    attachment1.WorldPosition = endPos
+    
+    beam.Attachment0 = attachment0
+    beam.Attachment1 = attachment1
+    beam.Width0 = getgenv().LegitTracerWidth
+    beam.Width1 = getgenv().LegitTracerWidth
+    beam.FaceCamera = true
+    beam.LightEmission = 1
+    beam.Brightness = 5
+    
+    local colorSequence = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 165, 0)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255, 255, 0)),
+        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 0)),
+        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0, 0, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(128, 0, 128))
+    })
+    beam.Color = colorSequence
+    
+    beam.Parent = tracerModel
+    attachment0.Parent = tracerModel
+    attachment1.Parent = tracerModel
+    tracerModel.Parent = workspace
+    
+    game:GetService("Debris"):AddItem(tracerModel, getgenv().LegitTracerLifetime)
+end
+
+RunService.RenderStepped:Connect(function()
+    if getgenv().AimAssistEnabled and isAiming() then
+        local targetPlayer = getClosestPlayerLegit()
+        if targetPlayer and targetPlayer.Character then
+            local targetPart = nil
+            if getgenv().AimHitbox == "Head" then
+                targetPart = targetPlayer.Character:FindFirstChild("Head")
+            elseif getgenv().AimHitbox == "Torso" then
+                targetPart = targetPlayer.Character:FindFirstChild("UpperTorso") or targetPlayer.Character:FindFirstChild("Torso")
+            else
+                targetPart = targetPlayer.Character:FindFirstChild("Head") or targetPlayer.Character:FindFirstChild("UpperTorso") or targetPlayer.Character:FindFirstChild("Torso")
+            end
+            
+            if targetPart then
+                local smoothness = getgenv().AimSmoothness / 100
+                local targetPosition = targetPart.Position
+                local currentCameraCFrame = Camera.CFrame
+                local goalCFrame = CFrame.lookAt(currentCameraCFrame.Position, targetPosition)
+                local newCFrame = currentCameraCFrame:Lerp(goalCFrame, smoothness)
+                Camera.CFrame = newCFrame
+            end
+        end
+    end
 end)
+
+local legitToolConnection
+local function onLegitToolAdded(tool)
+    if tool:IsA("Tool") and tool:FindFirstChild("IsGun") then
+        local values = tool:FindFirstChild("Values")
+        if values then
+            for _, child in pairs(values:GetChildren()) do
+                if string.find(child.Name, "Ammo") then
+                    local lastValue = child.Value
+                    child:GetPropertyChangedSignal("Value"):Connect(function()
+                        if child.Value ~= lastValue and getgenv().LegitTracerEnabled then
+                            local character = LocalPlayer.Character
+                            if character then
+                                local head = character:FindFirstChild("Head")
+                                if head then
+                                    local startPos = head.Position + Vector3.new(5, 5, 0)
+                                    local rayOrigin = Camera.CFrame.Position
+                                    local rayDirection = (Camera:ScreenPointToRay(Vector2.new(0, 0)).Direction)
+                                    local raycastParams = RaycastParams.new()
+                                    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+                                    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+                                    local raycastResult = Workspace:Raycast(rayOrigin, rayDirection * 1000, raycastParams)
+                                    local endPos = raycastResult and raycastResult.Position or (rayOrigin + rayDirection * 1000)
+                                    createLegitTracer(startPos, endPos)
+                                end
+                            end
+                            lastValue = child.Value
+                        end
+                    end)
+                end
+            end
+        end
+    end
+end
+
+local function setupLegitToolMonitoring()
+    if LocalPlayer.Character then
+        for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
+            onLegitToolAdded(tool)
+        end
+    end
+    
+    if legitToolConnection then legitToolConnection:Disconnect() end
+    legitToolConnection = LocalPlayer.CharacterAdded:Connect(function(character)
+        character.ChildAdded:Connect(onLegitToolAdded)
+    end)
+end
+
+setupLegitToolMonitoring()
