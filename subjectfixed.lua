@@ -2141,321 +2141,388 @@ task.spawn(function()
         end
     end)
 end)
-local LegitBotTab = Window:AddTab('LegitBot')
-local AimAssistGroupBox = LegitBotTab:AddLeftGroupbox('Aim Assist')
+local VisualsTab = Window:AddTab('Drawing')
+local ESPGroupBox = VisualsTab:AddLeftGroupbox('Settings')
 
-getgenv().LegitBotSettings = {
-    AimAssistEnabled = false,
-    AimAssistFOV = 50,
-    AimAssistSmoothness = 10,
-    AimAssistHitChance = 100,
-    AimAssistTargetPart = "Head",
-    AimAssistVisibilityCheck = true,
-    AimAssistTeamCheck = true,
-    AimAssistTracerEnabled = false,
-    AimAssistTracerColor = Color3.fromRGB(0, 255, 0),
-    AimAssistTargetList = {},
-    AimAssistWhitelist = {}
+getgenv().ESPSettings = {
+    ESPEnabled = false,
+    ESPColor = Color3.fromRGB(255, 0, 0),
+    ShowHealthBar = true,
+    ShowName = true,
+    ShowTool = true,
+    ShowDistance = true,
+    MaxDistance = 1000,
+    ShowBox = true,
+    ShowTracer = false,
+    ShowSkeleton = false,
+    ShowGlow = true
 }
 
-AimAssistGroupBox:AddToggle('AimAssistEnabled', {
-    Text = 'Enable Aim Assist',
-    Default = getgenv().LegitBotSettings.AimAssistEnabled,
+ESPGroupBox:AddToggle('ESPEnabled', {
+    Text = 'Drawing',
+    Default = getgenv().ESPSettings.ESPEnabled,
     Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistEnabled = Value
+        getgenv().ESPSettings.ESPEnabled = Value
     end
 })
 
-AimAssistGroupBox:AddSlider('AimAssistFOV', {
-    Text = 'Aim Assist FOV',
-    Default = getgenv().LegitBotSettings.AimAssistFOV,
-    Min = 10,
-    Max = 750,
-    Rounding = 0,
+ESPGroupBox:AddToggle('ShowHealthBar', {
+    Text = 'Health Bar',
+    Default = getgenv().ESPSettings.ShowHealthBar,
     Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistFOV = Value
+        getgenv().ESPSettings.ShowHealthBar = Value
     end
 })
 
-AimAssistGroupBox:AddSlider('AimAssistSmoothness', {
-    Text = 'Smoothness',
-    Default = getgenv().LegitBotSettings.AimAssistSmoothness,
-    Min = 1,
-    Max = 30,
-    Rounding = 0,
+ESPGroupBox:AddToggle('ShowName', {
+    Text = 'Name Tag',
+    Default = getgenv().ESPSettings.ShowName,
     Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistSmoothness = Value
+        getgenv().ESPSettings.ShowName = Value
     end
 })
 
-AimAssistGroupBox:AddSlider('AimAssistHitChance', {
-    Text = 'Hit Chance %',
-    Default = getgenv().LegitBotSettings.AimAssistHitChance,
+ESPGroupBox:AddToggle('ShowTool', {
+    Text = 'Tool Name',
+    Default = getgenv().ESPSettings.ShowTool,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowTool = Value
+    end
+})
+
+ESPGroupBox:AddToggle('ShowDistance', {
+    Text = 'Distance',
+    Default = getgenv().ESPSettings.ShowDistance,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowDistance = Value
+    end
+})
+
+ESPGroupBox:AddToggle('ShowBox', {
+    Text = 'Bounding Box',
+    Default = getgenv().ESPSettings.ShowBox,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowBox = Value
+    end
+})
+
+ESPGroupBox:AddToggle('ShowTracer', {
+    Text = 'Tracer Line',
+    Default = getgenv().ESPSettings.ShowTracer,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowTracer = Value
+    end
+})
+
+ESPGroupBox:AddToggle('ShowSkeleton', {
+    Text = 'Skeleton',
+    Default = getgenv().ESPSettings.ShowSkeleton,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowSkeleton = Value
+    end
+})
+
+ESPGroupBox:AddToggle('ShowGlow', {
+    Text = 'Player Glow',
+    Default = getgenv().ESPSettings.ShowGlow,
+    Callback = function(Value)
+        getgenv().ESPSettings.ShowGlow = Value
+    end
+})
+
+ESPGroupBox:AddSlider('MaxDistance', {
+    Text = 'Max Distance',
+    Default = getgenv().ESPSettings.MaxDistance,
     Min = 0,
-    Max = 100,
+    Max = 5000,
     Rounding = 0,
     Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistHitChance = Value
+        getgenv().ESPSettings.MaxDistance = Value
     end
 })
 
-AimAssistGroupBox:AddDropdown('AimAssistTargetPart', {
-    Values = {"Head", "UpperTorso", "LowerTorso"},
-    Default = getgenv().LegitBotSettings.AimAssistTargetPart,
-    Text = 'Target Part',
-    Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistTargetPart = Value
-    end
-})
-
-AimAssistGroupBox:AddToggle('AimAssistVisibilityCheck', {
-    Text = 'Visibility Check',
-    Default = getgenv().LegitBotSettings.AimAssistVisibilityCheck,
-    Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistVisibilityCheck = Value
-    end
-})
-
-AimAssistGroupBox:AddToggle('AimAssistTeamCheck', {
-    Text = 'Team Check',
-    Default = getgenv().LegitBotSettings.AimAssistTeamCheck,
-    Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistTeamCheck = Value
-    end
-})
-
-AimAssistGroupBox:AddToggle('AimAssistTracerEnabled', {
-    Text = 'Tracer',
-    Default = getgenv().LegitBotSettings.AimAssistTracerEnabled,
-    Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistTracerEnabled = Value
-    end
-}):AddColorPicker('AimAssistTracerColor', {
-    Default = Color3.fromRGB(0, 255, 0),
-    Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistTracerColor = Value
-    end
-})
-
-local TargetListGroupBox = LegitBotTab:AddRightGroupbox('Target Settings')
-
-TargetListGroupBox:AddDropdown('AimAssistTargetList', {
-    Values = {},
-    Default = 1,
-    Multi = true,
-    Text = 'Target List',
-    Callback = function(Value, Key, State)
-        getgenv().LegitBotSettings.AimAssistTargetList = {}
-        for name, selected in pairs(Options.AimAssistTargetList.Value) do
-            if selected then
-                table.insert(getgenv().LegitBotSettings.AimAssistTargetList, name)
-            end
-        end
-    end
-})
-
-TargetListGroupBox:AddDropdown('AimAssistWhitelist', {
-    Values = {},
-    Default = 1,
-    Multi = true,
-    Text = 'Whitelist',
-    Callback = function(Value, Key, State)
-        getgenv().LegitBotSettings.AimAssistWhitelist = {}
-        for name, selected in pairs(Options.AimAssistWhitelist.Value) do
-            if selected then
-                table.insert(getgenv().LegitBotSettings.AimAssistWhitelist, name)
-            end
-        end
-    end
-})
-
-local FOVGroupBox = LegitBotTab:AddRightGroupbox('FOV Settings')
-
-FOVGroupBox:AddToggle('AimAssistFOVVisible', {
-    Text = 'Show FOV Circle',
+ESPGroupBox:AddToggle('ESPColorToggle', {
+    Text = 'ESP Color',
     Default = false,
+    Callback = function(Value) end
+}):AddColorPicker('ESPColor', {
+    Default = Color3.fromRGB(255, 0, 0),
     Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistFOVVisible = Value
-    end
-}):AddColorPicker('AimAssistFOVColor', {
-    Default = Color3.fromRGB(0, 255, 0),
-    Callback = function(Value)
-        getgenv().LegitBotSettings.AimAssistFOVColor = Value
+        getgenv().ESPSettings.ESPColor = Value
     end
 })
 
-local AimAssistFOVCircle = Drawing.new("Circle")
-AimAssistFOVCircle.Visible = false
-AimAssistFOVCircle.Color = getgenv().LegitBotSettings.AimAssistFOVColor
-AimAssistFOVCircle.Thickness = 1
-AimAssistFOVCircle.Filled = false
+local ESPObjects = {}
+local GlowObjects = {}
 
-function updateAimAssistFOV()
-    AimAssistFOVCircle.Visible = getgenv().LegitBotSettings.AimAssistFOVVisible and getgenv().LegitBotSettings.AimAssistEnabled
-    AimAssistFOVCircle.Radius = getgenv().LegitBotSettings.AimAssistFOV
-    AimAssistFOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    AimAssistFOVCircle.Color = getgenv().LegitBotSettings.AimAssistFOVColor
-end
-
-function isInAimAssistFOV(position)
-    local screenPos, onScreen = Camera:WorldToViewportPoint(position)
-    if not onScreen then return false end
+function createESP(player)
+    if ESPObjects[player] then return end
     
-    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    local mousePos = Vector2.new(screenPos.X, screenPos.Y)
-    local distance = (mousePos - center).Magnitude
+    local esp = {
+        Box = Drawing.new("Square"),
+        HealthBar = Drawing.new("Square"),
+        HealthText = Drawing.new("Text"),
+        Name = Drawing.new("Text"),
+        Tool = Drawing.new("Text"),
+        Distance = Drawing.new("Text"),
+        Tracer = Drawing.new("Line"),
+        Skeleton = {}
+    }
     
-    return distance <= getgenv().LegitBotSettings.AimAssistFOV
-end
-
-function isWhitelisted(player)
-    for _, whitelistedName in pairs(getgenv().LegitBotSettings.AimAssistWhitelist) do
-        if player.Name == whitelistedName then
-            return true
-        end
+    esp.Box.Visible = false
+    esp.Box.Thickness = 1
+    esp.Box.Filled = false
+    
+    esp.HealthBar.Visible = false
+    esp.HealthBar.Thickness = 1
+    esp.HealthBar.Filled = true
+    
+    esp.HealthText.Visible = false
+    esp.HealthText.Size = 13
+    esp.HealthText.Outline = true
+    esp.HealthText.Center = true
+    esp.HealthText.Font = Font.new("rbxassetid://12187371840")
+    
+    esp.Name.Visible = false
+    esp.Name.Size = 14
+    esp.Name.Outline = true
+    esp.Name.Center = true
+    esp.Name.Font = Font.new("rbxassetid://12187371840")
+    
+    esp.Tool.Visible = false
+    esp.Tool.Size = 12
+    esp.Tool.Outline = true
+    esp.Tool.Center = true
+    esp.Tool.Font = Font.new("rbxassetid://12187371840")
+    
+    esp.Distance.Visible = false
+    esp.Distance.Size = 12
+    esp.Distance.Outline = true
+    esp.Distance.Center = true
+    esp.Distance.Font = Font.new("rbxassetid://12187371840")
+    
+    esp.Tracer.Visible = false
+    esp.Tracer.Thickness = 1
+    
+    ESPObjects[player] = esp
+    
+    if getgenv().ESPSettings.ShowGlow then
+        local glow = Instance.new("Highlight")
+        glow.Name = "ESPGlow"
+        glow.FillColor = getgenv().ESPSettings.ESPColor
+        glow.OutlineColor = Color3.new(1, 1, 1)
+        glow.FillTransparency = 0.5
+        glow.OutlineTransparency = 0
+        glow.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        glow.Parent = game:GetService("CoreGui")
+        GlowObjects[player] = glow
     end
-    return false
 end
 
-function isInTargetList(player)
-    if #getgenv().LegitBotSettings.AimAssistTargetList == 0 then return true end
-    for _, targetName in pairs(getgenv().LegitBotSettings.AimAssistTargetList) do
-        if player.Name == targetName then
-            return true
-        end
-    end
-    return false
-end
-
-function getAimAssistTarget()
-    if not getgenv().LegitBotSettings.AimAssistEnabled then return nil end
-    
-    local closestTarget = nil
-    local closestDistance = math.huge
-    
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            if getgenv().LegitBotSettings.AimAssistTeamCheck and player.Team == LocalPlayer.Team then
-                continue
-            end
-            
-            if isWhitelisted(player) then
-                continue
-            end
-            
-            if not isInTargetList(player) then
-                continue
-            end
-            
-            local humanoid = player.Character:FindFirstChild("Humanoid")
-            local targetPart = player.Character:FindFirstChild(getgenv().LegitBotSettings.AimAssistTargetPart)
-            
-            if humanoid and humanoid.Health > 0 and targetPart then
-                if getgenv().LegitBotSettings.AimAssistVisibilityCheck and not IsPlayerVisible(player) then
-                    continue
-                end
-                
-                if isInAimAssistFOV(targetPart.Position) then
-                    local screenPos = Camera:WorldToViewportPoint(targetPart.Position)
-                    local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
-                    
-                    if distance < closestDistance then
-                        closestDistance = distance
-                        closestTarget = {Player = player, Part = targetPart}
+function removeESP(player)
+    if ESPObjects[player] then
+        for _, drawing in pairs(ESPObjects[player]) do
+            if type(drawing) == "table" then
+                for _, bone in pairs(drawing) do
+                    if bone and bone.Remove then
+                        bone:Remove()
                     end
                 end
+            else
+                if drawing and drawing.Remove then
+                    drawing:Remove()
+                end
             end
         end
+        ESPObjects[player] = nil
     end
     
-    return closestTarget
+    if GlowObjects[player] then
+        GlowObjects[player]:Destroy()
+        GlowObjects[player] = nil
+    end
 end
 
-function calculateAimAssistHitChance()
-    return math.random(1, 100) <= getgenv().LegitBotSettings.AimAssistHitChance
-end
-
-function createAimAssistTracer(startPos, endPos)
-    if not getgenv().LegitBotSettings.AimAssistTracerEnabled then return end
-
-    local tracerModel = Instance.new("Model")
-    tracerModel.Name = "AimAssistTracer"
-
-    local beam = Instance.new("Beam")
-    beam.Color = ColorSequence.new(getgenv().LegitBotSettings.AimAssistTracerColor)
-    beam.Width0 = 0.2
-    beam.Width1 = 0.2
-    beam.Texture = "rbxassetid://7136858729"
-    beam.TextureSpeed = 1
-    beam.Brightness = 5
-    beam.LightEmission = 3
-    beam.FaceCamera = true
-
-    local a0 = Instance.new("Attachment")
-    local a1 = Instance.new("Attachment")
-    a0.WorldPosition = startPos
-    a1.WorldPosition = endPos
-
-    beam.Attachment0 = a0
-    beam.Attachment1 = a1
-
-    beam.Parent = tracerModel
-    a0.Parent = tracerModel
-    a1.Parent = tracerModel
-    tracerModel.Parent = workspace
-
-    delay(0.3, function()
-        if tracerModel then tracerModel:Destroy() end
-    end)
-end
-
-function updateAimAssistPlayerLists()
-    local playerNames = {}
+function updateESP()
+    if not getgenv().ESPSettings.ESPEnabled then
+        for player, esp in pairs(ESPObjects) do
+            removeESP(player)
+        end
+        return
+    end
+    
+    local camera = workspace.CurrentCamera
+    
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            table.insert(playerNames, player.Name)
+        if player == LocalPlayer then continue end
+        
+        if not ESPObjects[player] then
+            createESP(player)
         end
-    end
-    Options.AimAssistTargetList:SetValues(playerNames)
-    Options.AimAssistWhitelist:SetValues(playerNames)
-end
-
-updateAimAssistPlayerLists()
-Players.PlayerAdded:Connect(updateAimAssistPlayerLists)
-Players.PlayerRemoving:Connect(updateAimAssistPlayerLists)
-
-local oldNamecallAimAssist
-oldNamecallAimAssist = hookmetamethod(game, "__namecall", function(...)
-    local Method = getnamecallmethod()
-    local Arguments = {...}
-    local self = Arguments[1]
-    
-    if getgenv().LegitBotSettings.AimAssistEnabled and self == workspace and not checkcaller() then
-        if Method == "Raycast" then
-            if calculateAimAssistHitChance() then
-                local target = getAimAssistTarget()
+        
+        local esp = ESPObjects[player]
+        local glow = GlowObjects[player]
+        
+        if player.Character and player.Character:FindFirstChild("Humanoid") and player.Character:FindFirstChild("HumanoidRootPart") then
+            local character = player.Character
+            local humanoid = character:FindFirstChild("Humanoid")
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            
+            if humanoid.Health > 0 then
+                local distance = (camera.CFrame.Position - rootPart.Position).Magnitude
                 
-                if target then
-                    local origin = Arguments[2]
-                    local hitPosition = target.Part.Position
-                    local direction = (hitPosition - origin).Unit * 1000
+                if distance <= getgenv().ESPSettings.MaxDistance then
+                    local head = character:FindFirstChild("Head")
+                    local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
                     
-                    Arguments[3] = direction
-                    
-                    if getgenv().LegitBotSettings.AimAssistTracerEnabled then
-                        createAimAssistTracer(origin, hitPosition)
+                    if head and torso then
+                        local headPos, headOnScreen = camera:WorldToViewportPoint(head.Position)
+                        local torsoPos, torsoOnScreen = camera:WorldToViewportPoint(torso.Position)
+                        
+                        if headOnScreen or torsoOnScreen then
+                            local color = getgenv().ESPSettings.ESPColor
+                            
+                            if getgenv().ESPSettings.ShowBox then
+                                local size = Vector2.new(2000 / distance, 3000 / distance)
+                                local position = Vector2.new(torsoPos.X - size.X / 2, torsoPos.Y - size.Y / 2)
+                                
+                                esp.Box.Visible = true
+                                esp.Box.Size = size
+                                esp.Box.Position = position
+                                esp.Box.Color = color
+                            else
+                                esp.Box.Visible = false
+                            end
+                            
+                            if getgenv().ESPSettings.ShowHealthBar then
+                                local healthPercent = humanoid.Health / humanoid.MaxHealth
+                                local barSize = Vector2.new(3, 40)
+                                local barPosition = Vector2.new(torsoPos.X - 25, torsoPos.Y - 20)
+                                
+                                esp.HealthBar.Visible = true
+                                esp.HealthBar.Size = Vector2.new(barSize.X, barSize.Y * healthPercent)
+                                esp.HealthBar.Position = Vector2.new(barPosition.X, barPosition.Y + (barSize.Y * (1 - healthPercent)))
+                                esp.HealthBar.Color = Color3.fromRGB(255 * (1 - healthPercent), 255 * healthPercent, 0)
+                                
+                                esp.HealthText.Visible = true
+                                esp.HealthText.Text = tostring(math.floor(humanoid.Health))
+                                esp.HealthText.Position = Vector2.new(barPosition.X - 10, barPosition.Y - 15)
+                                esp.HealthText.Color = Color3.new(1, 1, 1)
+                            else
+                                esp.HealthBar.Visible = false
+                                esp.HealthText.Visible = false
+                            end
+                            
+                            if getgenv().ESPSettings.ShowName then
+                                esp.Name.Visible = true
+                                esp.Name.Text = player.Name
+                                esp.Name.Position = Vector2.new(torsoPos.X, torsoPos.Y - 50)
+                                esp.Name.Color = color
+                            else
+                                esp.Name.Visible = false
+                            end
+                            
+                            if getgenv().ESPSettings.ShowTool then
+                                local toolName = "None"
+                                for _, item in pairs(character:GetChildren()) do
+                                    if item:IsA("Tool") then
+                                        toolName = item.Name
+                                        break
+                                    end
+                                end
+                                
+                                esp.Tool.Visible = true
+                                esp.Tool.Text = toolName
+                                esp.Tool.Position = Vector2.new(torsoPos.X, torsoPos.Y + 40)
+                                esp.Tool.Color = color
+                            else
+                                esp.Tool.Visible = false
+                            end
+                            
+                            if getgenv().ESPSettings.ShowDistance then
+                                esp.Distance.Visible = true
+                                esp.Distance.Text = string.format("%.0f studs", distance)
+                                esp.Distance.Position = Vector2.new(torsoPos.X, torsoPos.Y - 35)
+                                esp.Distance.Color = color
+                            else
+                                esp.Distance.Visible = false
+                            end
+                            
+                            if getgenv().ESPSettings.ShowTracer then
+                                esp.Tracer.Visible = true
+                                esp.Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+                                esp.Tracer.To = Vector2.new(torsoPos.X, torsoPos.Y)
+                                esp.Tracer.Color = color
+                            else
+                                esp.Tracer.Visible = false
+                            end
+                            
+                            if getgenv().ESPSettings.ShowGlow and glow then
+                                glow.Enabled = true
+                                glow.Adornee = character
+                                glow.FillColor = color
+                            end
+                        else
+                            for _, drawing in pairs(esp) do
+                                if drawing and type(drawing) ~= "table" then
+                                    drawing.Visible = false
+                                end
+                            end
+                            if glow then
+                                glow.Enabled = false
+                            end
+                        end
+                    end
+                else
+                    for _, drawing in pairs(esp) do
+                        if drawing and type(drawing) ~= "table" then
+                            drawing.Visible = false
+                        end
+                    end
+                    if glow then
+                        glow.Enabled = false
                     end
                 end
+            else
+                for _, drawing in pairs(esp) do
+                    if drawing and type(drawing) ~= "table" then
+                        drawing.Visible = false
+                    end
+                end
+                if glow then
+                    glow.Enabled = false
+                end
+            end
+        else
+            for _, drawing in pairs(esp) do
+                if drawing and type(drawing) ~= "table" then
+                    drawing.Visible = false
+                end
+            end
+            if glow then
+                glow.Enabled = false
             end
         end
     end
-    
-    return oldNamecallAimAssist(...)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    createESP(player)
 end)
+
+Players.PlayerRemoving:Connect(function(player)
+    removeESP(player)
+end)
+
+for _, player in pairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        createESP(player)
+    end
+end
 
 task.spawn(function()
     while true do
-        updateAimAssistFOV()
-        wait(0.1)
+        updateESP()
+        wait()
     end
 end)
