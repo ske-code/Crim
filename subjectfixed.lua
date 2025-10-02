@@ -2552,16 +2552,6 @@ LegitLeft:AddToggle('AimAssistEnabled', {
     end
 })
 
-LegitLeft:AddSlider('AimSmoothness', {
-    Text = 'Aim Smoothness',
-    Default = 20,
-    Min = 1,
-    Max = 100,
-    Rounding = 0,
-    Callback = function(Value)
-        getgenv().AimSmoothness = Value
-    end
-})
 
 LegitLeft:AddSlider('AimFOV', {
     Text = 'Aim FOV',
@@ -2755,12 +2745,10 @@ RunService.RenderStepped:Connect(function()
             end
             
             if targetPart then
-                local smoothness = getgenv().AimSmoothness / 100
                 local targetPosition = targetPart.Position
                 local currentCameraCFrame = Camera.CFrame
                 local goalCFrame = CFrame.lookAt(currentCameraCFrame.Position, targetPosition)
-                local newCFrame = currentCameraCFrame:Lerp(goalCFrame, smoothness)
-                Camera.CFrame = newCFrame
+                Camera.CFrame = goalCFrame
             end
         end
     end
@@ -2782,7 +2770,7 @@ local function onLegitToolAdded(tool)
                                 if head then
                                     local startPos = head.Position + Vector3.new(5, 5, 0)
                                     local rayOrigin = Camera.CFrame.Position
-                                    local rayDirection = (Camera:ScreenPointToRay(Vector2.new(0, 0)).Direction)
+                                    local rayDirection = Camera.CFrame.LookVector
                                     local raycastParams = RaycastParams.new()
                                     raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
                                     raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
