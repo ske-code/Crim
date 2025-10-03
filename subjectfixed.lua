@@ -150,6 +150,28 @@ do
 		end
 	end
 end
+for _, t in ipairs(getgc(true)) do
+    if typeof(t) == "table" then
+        if rawget(t, "A") and rawget(t, "B") and rawget(t, "EN") and rawget(t, "GP") then
+            if typeof(t.A) == "function" then hookfunction(t.A, function() end) end
+            if typeof(t.B) == "function" then hookfunction(t.B, function() end) end
+        end
+        for k, f in pairs(t) do
+            if typeof(f) == "function" and (tostring(k):lower():find("kick") or tostring(k):lower():find("detect")) then
+                hookfunction(f, function() end)
+            end
+        end
+    end
+end
+
+for _, f in pairs(getgc(true)) do
+    if typeof(f) == "function" and islclosure(f) then
+        local c = debug.getconstants(f)
+        if table.find(c, "Detected") and table.find(c, "Kick") and table.find(c, "IsStudio") then
+            hookfunction(f, function() return Instance.new("BindableEvent").Event:Wait() end)
+        end
+    end
+end
 local GNX_S = ReplicatedStorage:WaitForChild("Events"):WaitForChild("GNX_S")
 local ZFKLF__H = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ZFKLF__H")
 
