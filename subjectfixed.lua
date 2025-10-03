@@ -150,6 +150,7 @@ do
 		end
 	end
 end
+--[[
 for _, t in ipairs(getgc(true)) do
     if typeof(t) == "table" then
         if rawget(t, "A") and rawget(t, "B") and rawget(t, "EN") and rawget(t, "GP") then
@@ -172,6 +173,7 @@ for _, f in pairs(getgc(true)) do
         end
     end
 end
+--]]
 local GNX_S = ReplicatedStorage:WaitForChild("Events"):WaitForChild("GNX_S")
 local ZFKLF__H = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ZFKLF__H")
 
