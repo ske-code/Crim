@@ -867,9 +867,17 @@ function getRandomBulletPosition(targetHead)
     raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
     raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, targetHead.Parent}
     
-    local raycastResult = workspace:Raycast(randomPosition, Vector3.new(0, -10, 0), raycastParams)
+    local raycastResult = workspace:Raycast(randomPosition, Vector3.new(0, -50, 0), raycastParams)
     if raycastResult then
-        randomPosition = Vector3.new(randomPosition.X, raycastResult.Position.Y + 2, randomPosition.Z)
+        local groundHeight = raycastResult.Position.Y
+        local minHeight = groundHeight + 2
+        local maxHeight = groundHeight + offset
+        
+        if randomPosition.Y < minHeight then
+            randomPosition = Vector3.new(randomPosition.X, minHeight, randomPosition.Z)
+        elseif randomPosition.Y > maxHeight then
+            randomPosition = Vector3.new(randomPosition.X, maxHeight, randomPosition.Z)
+        end
     else
         randomPosition = Vector3.new(randomPosition.X, targetPos.Y + 2, randomPosition.Z)
     end
