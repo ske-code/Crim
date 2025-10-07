@@ -866,19 +866,8 @@ function getRandomBulletPosition(targetHead)
     local rotatedCFrame = baseCFrame * CFrame.Angles(angleX, angleY, 0)
     local randomPosition = startPos + rotatedCFrame.LookVector * distance
     
-    local raycastParams = RaycastParams.new()
-    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, targetHead.Parent}
-    
-    local groundPosition = Vector3.new(randomPosition.X, 1000, randomPosition.Z)
-    local raycastResult = workspace:Raycast(groundPosition, Vector3.new(0, -2000, 0), raycastParams)
-    
-    if raycastResult then
-        local groundHeight = raycastResult.Position.Y
-        return Vector3.new(randomPosition.X, groundHeight + 1, randomPosition.Z)
-    else
-        return Vector3.new(randomPosition.X, targetPos.Y + 1, randomPosition.Z)
-    end
+    local playerFeetHeight = targetPos.Y - 3
+    return Vector3.new(randomPosition.X, playerFeetHeight + 3, randomPosition.Z)
 end
 function createTracer(startPos, endPos)
     if not getgenv().TracerEnabled then return end
