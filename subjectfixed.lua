@@ -1647,6 +1647,8 @@ PlayerLeft:AddSlider('HighJumpPower', {
         getgenv().HighJumpPower = Value
     end
 })
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local function applyJumpVelocity()
     if not getgenv().HighJumpEnabled then return end
     
