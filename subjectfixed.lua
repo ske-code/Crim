@@ -1065,19 +1065,60 @@ SaveManager:LoadAutoloadConfig()
 local VisualTab = Window:AddTab('Visuals')
 local VisualLeft = VisualTab:AddLeftGroupbox('Player Modifications')
 
-getgenv().HeadlessEnabled = false
 getgenv().ForceFieldEnabled = false
 getgenv().ForceFieldColor = Color3.fromRGB(255, 0, 0)
 getgenv().ForceFieldTransparency = 0.5
+getgenv().HeadlessEnabled = false
 
 VisualLeft:AddToggle('HeadlessEnabled', {
     Text = 'Headless',
     Default = false,
     Callback = function(Value)
         getgenv().HeadlessEnabled = Value
-        applyHeadless()
     end
 })
+local function createMotor6D(part0, part1, c0, c1)
+    local motor = Instance.new("Motor6D")
+    motor.Part0 = part0
+    motor.Part1 = part1
+    motor.C0 = c0 or CFrame.new()
+    motor.C1 = c1 or CFrame.new()
+    motor.Parent = part0
+    return motor
+end
+
+local function applyHeadTilt()
+    if not getgenv().HeadlessEnabled then return end
+    
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    local head = character:FindFirstChild("Head")
+    local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+    
+    if not rootPart or not head or not torso then return end
+    
+    local neck = head:FindFirstChild("Neck")
+    if not neck then
+        neck = createMotor6D(torso, head, CFrame.new(0, 0, 0))
+    end
+    
+    neck.C0 = CFrame.new(0, 0, 0.5) * CFrame.Angles(0, math.pi, 0)
+end
+
+local function onCharacterAdded(character)
+    character:WaitForChild("HumanoidRootPart")
+    character:WaitForChild("Head")
+    character:WaitForChild("Torso")
+    applyHeadTilt()
+end
+
+if LocalPlayer.Character then
+    onCharacterAdded(LocalPlayer.Character)
+end
+
+LocalPlayer.CharacterAdded:Connect(onCharacterAdded)
 
 VisualLeft:AddToggle('ForceFieldEnabled', {
     Text = 'Force Field',
@@ -1115,25 +1156,6 @@ VisualLeft:AddSlider('ForceFieldTransparency', {
         end
     end
 })
-
-function applyHeadless()
-    if not LocalPlayer.Character then return end
-    
-    local head = LocalPlayer.Character:FindFirstChild("Head")
-    if head then
-        head.Transparency = getgenv().HeadlessEnabled and 1 or 0
-        
-        if getgenv().HeadlessEnabled then
-            for _, face in pairs(head:GetChildren()) do
-                if face:IsA("Decal") or face:IsA("Texture") then
-                    face:Destroy()
-                end
-            end
-        else
-            head.Transparency = 0
-        end
-    end
-end
 
 function applyForceField()
     if not LocalPlayer.Character then return end
@@ -1604,6 +1626,69 @@ PlayerLeft:AddToggle('NoFallDamage', {
         end
 	end
 })
+getgenv().HighJumpEnabled = false
+getgenv().HighJumpPower = 40
+
+PlayerLeft:AddToggle('HighJumpEnabled', {
+    Text = 'High Jump',
+    Default = false,
+    Callback = function(Value)
+        getgenv().HighJumpEnabled = Value
+    end
+})
+
+PlayerLeft:AddSlider('HighJumpPower', {
+    Text = 'Jump Power',
+    Default = 40,
+    Min = 10,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().HighJumpPower = Value
+    end
+})
+local function applyJumpVelocity()
+    if not getgenv().HighJumpEnabled then return end
+    
+    local character = LocalPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid and rootPart and humanoid:GetState() == Enum.HumanoidStateType.Jumping then
+            local currentVelocity = rootPart.Velocity
+            rootPart.Velocity = Vector3.new(currentVelocity.X, getgenv().HighJumpPower, currentVelocity.Z)
+        end
+    end
+end
+
+local function onJumpRequest()
+    if not getgenv().HighJumpEnabled then return end
+    
+    local character = LocalPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid and rootPart then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end
+
+local function onCharacterAddedHighJump(character)
+    character:WaitForChild("Humanoid")
+    character:WaitForChild("HumanoidRootPart")
+end
+
+if LocalPlayer.Character then
+    onCharacterAddedHighJump(LocalPlayer.Character)
+end
+
+LocalPlayer.CharacterAdded:Connect(onCharacterAddedHighJump)
+UserInputService.JumpRequest:Connect(onJumpRequest)
+
+RunService.Heartbeat:Connect(applyJumpVelocity)
 
 local FunLeft = PlayerTab:AddLeftGroupbox('Fun Features')
 
