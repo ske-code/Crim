@@ -856,14 +856,26 @@ function getRandomBulletPosition(targetHead)
     local targetPos = targetHead.Position
     local startPos = Camera.CFrame.Position
     
-    local direction = (targetPos - startPos).Unit
+    local direction = (targetPos - startPos)
+    local distance = direction.Magnitude
+    local unitDirection = direction.Unit
     
     local maxAngle = math.min(offset, 100)
     local angleX = math.rad(math.random(0, maxAngle))
     local angleY = math.rad(math.random(0, maxAngle))
     
-    local randomDirection = direction * CFrame.Angles(angleX, angleY, 0)
-    local randomPosition = startPos + randomDirection.LookVector * (targetPos - startPos).Magnitude
+    local cosX = math.cos(angleX)
+    local sinX = math.sin(angleX)
+    local cosY = math.cos(angleY)
+    local sinY = math.sin(angleY)
+    
+    local randomDirection = Vector3.new(
+        unitDirection.X * cosY * cosX - unitDirection.Z * sinY,
+        unitDirection.Y * cosX + sinX,
+        unitDirection.X * sinY + unitDirection.Z * cosY * cosX
+    )
+    
+    local randomPosition = startPos + randomDirection * distance
     
     local raycastParams = RaycastParams.new()
     raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
