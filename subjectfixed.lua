@@ -856,45 +856,29 @@ function getRandomBulletPosition(targetHead)
     local targetPos = targetHead.Position
     local startPos = Camera.CFrame.Position
     
-    local direction = (targetPos - startPos)
-    local distance = direction.Magnitude
-    local unitDirection = direction.Unit
+    local distance = (targetPos - startPos).Magnitude
     
     local maxAngle = math.min(offset, 100)
-    local angleX = math.rad(math.random(0, maxAngle))
-    local angleY = math.rad(math.random(0, maxAngle))
+    local angleX = math.rad(math.random(-maxAngle, maxAngle))
+    local angleY = math.rad(math.random(-maxAngle, maxAngle))
     
-    local cosX = math.cos(angleX)
-    local sinX = math.sin(angleX)
-    local cosY = math.cos(angleY)
-    local sinY = math.sin(angleY)
-    
-    local randomDirection = Vector3.new(
-        unitDirection.X * cosY * cosX - unitDirection.Z * sinY,
-        unitDirection.Y * cosX + sinX,
-        unitDirection.X * sinY + unitDirection.Z * cosY * cosX
-    )
-    
-    local randomPosition = startPos + randomDirection * distance
+    local baseCFrame = CFrame.lookAt(startPos, targetPos)
+    local rotatedCFrame = baseCFrame * CFrame.Angles(angleX, angleY, 0)
+    local randomPosition = startPos + rotatedCFrame.LookVector * distance
     
     local raycastParams = RaycastParams.new()
     raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
     raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, targetHead.Parent}
     
-    local raycastResult = workspace:Raycast(randomPosition, Vector3.new(0, -50, 0), raycastParams)
+    local groundPosition = Vector3.new(randomPosition.X, 1000, randomPosition.Z)
+    local raycastResult = workspace:Raycast(groundPosition, Vector3.new(0, -2000, 0), raycastParams)
+    
     if raycastResult then
         local groundHeight = raycastResult.Position.Y
-        local minHeight = groundHeight + 2
-        local maxHeight = groundHeight + offset
-        
-        if randomPosition.Y < minHeight then
-            randomPosition = Vector3.new(randomPosition.X, minHeight, randomPosition.Z)
-        elseif randomPosition.Y > maxHeight then
-            randomPosition = Vector3.new(randomPosition.X, maxHeight, randomPosition.Z)
-        end
+        return Vector3.new(randomPosition.X, groundHeight + 1, randomPosition.Z)
+    else
+        return Vector3.new(randomPosition.X, targetPos.Y + 1, randomPosition.Z)
     end
-    
-    return randomPosition
 end
 function createTracer(startPos, endPos)
     if not getgenv().TracerEnabled then return end
