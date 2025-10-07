@@ -501,6 +501,7 @@ RageLeft:AddSlider('TracerOffsetZ', {
 })
 getgenv().RandomTracer = false
 getgenv().RandomTracerOffset = 5
+
 RageLeft:AddToggle('RandomTracer', {
     Text = 'Random Bullet',
     Default = false,
@@ -519,21 +520,7 @@ RageLeft:AddSlider('RandomTracerOffset', {
         getgenv().RandomTracerOffset = Value
     end
 })
-function getRandomOffsetPosition(position, direction)
-    if not getgenv().RandomTracer then return position end
 
-    local angleNoise = Vector3.new(
-        math.random() - 0.5,
-        math.random() - 0.5,
-        math.random() - 0.5
-    ).Unit * 0.1
-
-    local noisyDirection = (direction.Unit + angleNoise).Unit
-    local offsetMagnitude = math.random(1, getgenv().RandomTracerOffset)
-    local offset = noisyDirection * offsetMagnitude
-
-    return position + offset
-end
 
 function canSeeTarget(targetPart)
     if not getgenv().VisibilityCheck then return true end
@@ -862,7 +849,33 @@ function getCurrentTool()
     end
     return nil
 end
-
+function getRandomBulletPosition(targetHead)
+    if not targetHead then return nil end
+    
+    local offset = getgenv().RandomTracerOffset or 5
+    local targetPos = targetHead.Position
+    
+    local randomOffset = Vector3.new(
+        math.random(-offset, offset),
+        math.random(2, offset),
+        math.random(-offset, offset)
+    )
+    
+    local randomPosition = targetPos + randomOffset
+    
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, targetHead.Parent}
+    
+    local raycastResult = workspace:Raycast(randomPosition, Vector3.new(0, -10, 0), raycastParams)
+    if raycastResult then
+        randomPosition = Vector3.new(randomPosition.X, raycastResult.Position.Y + 2, randomPosition.Z)
+    else
+        randomPosition = Vector3.new(randomPosition.X, targetPos.Y + 2, randomPosition.Z)
+    end
+    
+    return randomPosition
+end
 function createTracer(startPos, endPos)
     if not getgenv().TracerEnabled then return end
 
@@ -871,9 +884,9 @@ function createTracer(startPos, endPos)
     local direction = (endPos - startPos)
 
     if getgenv().RandomTracer then
-        startPos = getRandomOffsetPosition(startPos, direction)
-        endPos = getRandomOffsetPosition(endPos, direction)
-    end
+        startPos = getRandomBulletPosition(getClosest())
+        endPos = getRandomBulletPosition(getClosest())
+	end
 
     local tracerModel = Instance.new("Model")
     tracerModel.Name = "TracerBeam"
