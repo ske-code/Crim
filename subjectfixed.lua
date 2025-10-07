@@ -854,14 +854,16 @@ function getRandomBulletPosition(targetHead)
     
     local offset = getgenv().RandomTracerOffset or 5
     local targetPos = targetHead.Position
+    local startPos = Camera.CFrame.Position
     
-    local randomOffset = Vector3.new(
-        math.random(-offset, offset),
-        math.random(2, offset),
-        math.random(-offset, offset)
-    )
+    local direction = (targetPos - startPos).Unit
     
-    local randomPosition = targetPos + randomOffset
+    local maxAngle = math.min(offset, 100)
+    local angleX = math.rad(math.random(0, maxAngle))
+    local angleY = math.rad(math.random(0, maxAngle))
+    
+    local randomDirection = direction * CFrame.Angles(angleX, angleY, 0)
+    local randomPosition = startPos + randomDirection.LookVector * (targetPos - startPos).Magnitude
     
     local raycastParams = RaycastParams.new()
     raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
@@ -878,8 +880,6 @@ function getRandomBulletPosition(targetHead)
         elseif randomPosition.Y > maxHeight then
             randomPosition = Vector3.new(randomPosition.X, maxHeight, randomPosition.Z)
         end
-    else
-        randomPosition = Vector3.new(randomPosition.X, targetPos.Y + 2, randomPosition.Z)
     end
     
     return randomPosition
