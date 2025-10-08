@@ -861,9 +861,10 @@ function getRandomBulletPosition(targetHead)
     local maxAngle = math.min(offset, 100)
     local angleX = math.rad(math.random(-maxAngle, maxAngle))
     local angleY = math.rad(math.random(-maxAngle, maxAngle))
+    local angleZ = math.rad(math.random(-maxAngle, maxAngle))
     
     local baseCFrame = CFrame.lookAt(startPos, targetPos)
-    local rotatedCFrame = baseCFrame * CFrame.Angles(angleX, angleY, 0)
+    local rotatedCFrame = baseCFrame * CFrame.Angles(angleX, angleY, angleZ)
     local randomPosition = startPos + rotatedCFrame.LookVector * distance
     
     local playerFeetHeight = targetPos.Y - 3
