@@ -880,7 +880,7 @@ function createTracer(startPos, endPos)
     if getgenv().RandomTracer then
         startPos = getRandomBulletPosition(getClosest())
         endPos = getRandomBulletPosition(getClosest())
-	end
+    end
 
     local tracerModel = Instance.new("Model")
     tracerModel.Name = "TracerBeam"
@@ -908,8 +908,24 @@ function createTracer(startPos, endPos)
     a1.Parent = tracerModel
     tracerModel.Parent = workspace
 
-    delay(getgenv().TracerLifetime or 0.3, function()
-        if tracerModel then tracerModel:Destroy() end
+    local tweenInfo = TweenInfo.new(
+        getgenv().TracerLifetime or 0.3,
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.Out
+    )
+
+    local tween = game:GetService("TweenService"):Create(beam, tweenInfo, {
+        Width0 = 0,
+        Width1 = 0,
+        Brightness = 0
+    })
+
+    tween:Play()
+
+    tween.Completed:Connect(function()
+        if tracerModel then 
+            tracerModel:Destroy() 
+        end
     end)
 
     return tracerModel
