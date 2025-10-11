@@ -1179,6 +1179,11 @@ highlight.FillTransparency = 0.5
 highlight.OutlineTransparency = 0
 highlight.Parent = game:GetService("CoreGui")
 
+local billboard = Instance.new("BillboardGui")
+billboard.Size = UDim2.new(0, 200, 0, 50)
+billboard.StudsOffset = Vector3.new(0, 3, 0)
+billboard.AlwaysOnTop = true
+
 local nameTag = Instance.new("TextLabel")
 nameTag.BackgroundTransparency = 1
 nameTag.TextColor3 = Color3.new(1, 0, 0)
@@ -1186,46 +1191,49 @@ nameTag.TextSize = 14
 nameTag.FontFace = Font.new("rbxassetid://12187371840")
 nameTag.TextStrokeTransparency = 0
 nameTag.TextStrokeColor3 = Color3.new(0, 0, 0)
-nameTag.Size = UDim2.new(0, 200, 0, 20)
-nameTag.Parent = game:GetService("CoreGui")
+nameTag.Size = UDim2.new(1, 0, 1, 0)
+nameTag.Parent = billboard
 
 game:GetService("RunService").RenderStepped:Connect(function()
-    local target = getClosestToMouse()
-    if target and target.Parent then
-        local player = game:GetService("Players"):GetPlayerFromCharacter(target.Parent)
-        if player then
-            highlight.Adornee = target.Parent
-            local screenPoint = workspace.CurrentCamera:WorldToScreenPoint(target.Position)
-            nameTag.Position = UDim2.new(0, screenPoint.X - 100, 0, screenPoint.Y - 30)
-            nameTag.Text = player.DisplayName .. " (" .. player.Name .. ")"
-            nameTag.Visible = true
+    local targetPlayer = getClosestToMouse()
+    if targetPlayer and targetPlayer.Character then
+        local head = targetPlayer.Character:FindFirstChild("Head")
+        if head then
+            highlight.Adornee = targetPlayer.Character
+            billboard.Adornee = head
+            billboard.Parent = head
+            nameTag.Text = targetPlayer.DisplayName .. " (@" .. targetPlayer.Name .. ")"
         else
             highlight.Adornee = nil
-            nameTag.Visible = false
+            billboard.Parent = nil
         end
     else
         highlight.Adornee = nil
-        nameTag.Visible = false
+        billboard.Parent = nil
     end
 end)
+local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+
 task.spawn(function()
     local lastShotTime = 0
-    local UserInputService = game:GetService("UserInputService")
     local RunService = game:GetService("RunService")
     
-    UserInputService.InputBegan:Connect(function(input)
-        if getgenv().TapFireEnabled and input.UserInputType == Enum.UserInputType.MouseButton1 then
+    mouse.Button1Down:Connect(function()
+        if getgenv().TapFireEnabled then
             local currentTime = tick()
             local waitTime = getgenv().NoFireRateLimit and 0 or (1 / getgenv().FireRate)
             
             if currentTime - lastShotTime >= waitTime then
-                local target = getClosestToScreenCenter()
-                if target then
-                    for i = 1, 5 do
-                        task.spawn(shoot, target)
+                local targetPlayer = getClosestToMouse()
+                if targetPlayer and targetPlayer.Character then
+                    local head = targetPlayer.Character:FindFirstChild("Head")
+                    if head then
+                        for i = 1, 5 do
+                            task.spawn(shoot, head)
+                        end
+                        lastShotTime = currentTime
+                        getgenv().LastShot = currentTime
                     end
-                    lastShotTime = currentTime
-                    getgenv().LastShot = currentTime
                 end
             end
         end
@@ -1237,9 +1245,9 @@ task.spawn(function()
             local waitTime = getgenv().NoFireRateLimit and 0 or (1 / getgenv().FireRate)
             
             if currentTime - lastShotTime >= waitTime then
-                local targeta = getClosest()
-                if targeta then
-                    shoot(targeta)
+                local target = getClosest()
+                if target then
+                    shoot(target)
                     lastShotTime = currentTime
                     getgenv().LastShot = currentTime
                 end
