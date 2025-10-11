@@ -1083,24 +1083,54 @@ RageLeft:AddToggle('NoFireRateLimit', {
         getgenv().NoFireRateLimit = Value
     end
 })
-
-task.spawn(function()
-    while true do
-        local waitTime = getgenv().NoFireRateLimit and 0 or (1 / getgenv().FireRate)
-        wait(waitTime)
+local function dexget(path)
+    local success, result = pcall(function()
+        local parts = string.split(path, ".")
+        local current
         
-        if getgenv().RageEnabled and tick() - getgenv().LastShot >= waitTime then
-            local target = getClosest()
-            if target then
-                for i = 1, 10 do
-                    shoot(target)
+        if game:GetService(parts[1]) then
+            current = game:GetService(parts[1])
+        else
+            current = game
+        end
+        
+        for i = 1, #parts do
+            if i == 1 and game:GetService(parts[1]) then
+            else
+                current = current[parts[i]]
+                if current == nil then
+                    return nil
                 end
-                getgenv().LastShot = tick()
             end
         end
-    end
-end)
+        return current
+    end)
+    return success and result or nil
+end
 
+local RunService = dexget("RunService")
+
+task.spawn(function()
+    local lastShotTime = 0
+    
+    RunService.Heartbeat:Connect(function()
+        if not getgenv().RageEnabled then return end
+        
+        local currentTime = tick()
+        local waitTime = getgenv().NoFireRateLimit and 0 or (1 / getgenv().FireRate)
+        
+        if currentTime - lastShotTime >= waitTime then
+            local target = getClosest()
+            if target then
+                for i = 1, 4 do
+                    task.spawn(shoot, target)
+                end
+                lastShotTime = currentTime
+                getgenv().LastShot = currentTime
+            end
+        end
+    end)
+end)
 ThemeManager:SetLibrary(Library)
 SaveManager:SetLibrary(Library)
 SaveManager:IgnoreThemeSettings()
