@@ -1,9 +1,82 @@
+local WTF = function()
+    local v_FontName = "NotifyFont"
+    local v_FontApiUrl = "https://api.github.com/repos/bluescan/proggyfonts/contents/ProggyOriginal/ProggyClean.ttf"
+    
+    if not isfolder("NotifyAssets") then
+        makefolder("NotifyAssets")
+    end
+    
+    local v_TtfPath = "NotifyAssets/" .. v_FontName .. ".ttf"
+    local v_JsonPath = "NotifyAssets/" .. v_FontName .. ".json"
+    
+    if isfile(v_TtfPath) and isfile(v_JsonPath) then
+        local v_Success, v_Result = pcall(function()
+            return Font.new(getcustomasset(v_JsonPath))
+        end)
+        if v_Success then
+            return v_Result
+        end
+    end
+    
+    if isfile(v_TtfPath) then
+        delfile(v_TtfPath)
+    end
+    
+    if isfile(v_JsonPath) then
+        delfile(v_JsonPath)
+    end
+
+    local v_Success = pcall(function()
+        local v_ApiResponse = request({
+            Url = v_FontApiUrl,
+            Method = "GET"
+        })
+        
+        if v_ApiResponse.Success and v_ApiResponse.StatusCode == 200 then
+            local v_ApiData = game:GetService("HttpService"):JSONDecode(v_ApiResponse.Body)
+            
+            if v_ApiData and v_ApiData.download_url then
+                local v_DownloadResponse = request({
+                    Url = v_ApiData.download_url,
+                    Method = "GET"
+                })
+                
+                if v_DownloadResponse.Success then
+                    writefile(v_TtfPath, v_DownloadResponse.Body)
+                    return true
+                end
+            end
+        end
+        return false
+    end)
+    if not v_Success then
+        return Font.fromEnum(Enum.Font.Code)
+    end
+
+    local v_FontData = {
+        name = v_FontName,
+        faces = { {
+            name = "Regular",
+            weight = 400,
+            style = "Normal",
+            assetId = getcustomasset(v_TtfPath)
+        } }
+    }
+
+    writefile(v_JsonPath, game:GetService("HttpService"):JSONEncode(v_FontData))
+    
+    local v_Success, v_Result = pcall(function()
+        return Font.new(getcustomasset(v_JsonPath))
+    end)
+    
+    return v_Success and v_Result or Font.fromEnum(Enum.Font.Code)
+end
 local Players = game:GetService("Players")
 local Library = {}
 Library.Open = true
 Library.Accent = Color3.fromRGB(85, 170, 255)
 Library.ScreenGUI = Instance.new("ScreenGui", game:GetService("CoreGui"))
-Library.UIFont = Font.new("rbxassetid://12187371840")
+Library.UIFont = WTF()
 
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
