@@ -324,10 +324,51 @@ local activeLogs = {}
 local white = Color3.fromRGB(255, 255, 255)
 local pink = Color3.fromRGB(255, 182, 193)
 
+local function loadCustomFont()
+    local fontName = "HitNotifyFont"
+    local fontUrl = "https://github.com/bluescan/proggyfonts/raw/refs/heads/master/ProggyOriginal/ProggyClean.ttf"
+    
+    if not isfolder("HitNotifyAssets") then
+        makefolder("HitNotifyAssets")
+    end
+    
+    local ttfPath = "HitNotifyAssets/" .. fontName .. ".ttf"
+    local jsonPath = "HitNotifyAssets/" .. fontName .. ".json"
+    
+    if not isfile(ttfPath) then
+        local success, result = pcall(function()
+            writefile(ttfPath, game:HttpGet(fontUrl))
+        end)
+        
+        if not success then
+            return Font.fromId(12187371840)
+        end
+    end
+
+    if isfile(jsonPath) then
+        return Font.new(getcustomasset(jsonPath))
+    end
+
+    local FontData = {
+        name = fontName,
+        faces = { {
+            name = "Regular",
+            weight = 200,
+            style = "Normal",
+            assetId = getcustomasset(ttfPath)
+        } }
+    }
+
+    writefile(jsonPath, game:GetService("HttpService"):JSONEncode(FontData))
+    return Font.new(getcustomasset(jsonPath))
+end
+
+local notifyFont = loadCustomFont()
+
 function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
     if not getgenv().HitNotifyEnabled then return end
 
-    local distance = math.floor((Camera.CFrame.Position - hitPosition).Magnitude)
+    local distance = math.floor((game.Workspace.CurrentCamera.CFrame.Position - hitPosition).Magnitude)
     local hp = targetHumanoid and tostring(math.floor(targetHumanoid.Health)) or "?"
     local weapon = tool and tool.Name or "Unknown"
 
@@ -356,7 +397,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
         label.BackgroundTransparency = 1
         label.BorderSizePixel = 0
         label.TextColor3 = col
-        label.FontFace = Font.new("rbxassetid://12187371840")
+        label.FontFace = notifyFont
         label.TextSize = 20
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.TextYAlignment = Enum.TextYAlignment.Center
