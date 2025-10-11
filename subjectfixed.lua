@@ -1270,6 +1270,7 @@ RageLeft:AddToggle('NoFireRateLimit', {
 
 local function getClosestToMouse()
     local closestPlayer = nil
+    local closestHead = nil
     local shortestDistance = math.huge
     local mousePos = game:GetService("UserInputService"):GetMouseLocation()
     
@@ -1307,7 +1308,8 @@ local function getClosestToMouse()
                         local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
                         if distance < shortestDistance then
                             shortestDistance = distance
-                            closestPlayer = head
+                            closestPlayer = player
+                            closestHead = head
                             if getgenv().TargetLock then
                                 getgenv().LockedTarget = player
                             end
@@ -1318,9 +1320,8 @@ local function getClosestToMouse()
         end
     end
     
-    return closestPlayer
+    return closestHead, closestPlayer
 end
-
 local highlight = Instance.new("Highlight")
 highlight.FillColor = Color3.new(1, 0, 0)
 highlight.OutlineColor = Color3.new(1, 0, 0)
@@ -1344,7 +1345,7 @@ nameTag.Size = UDim2.new(1, 0, 1, 0)
 nameTag.Parent = billboard
 
 game:GetService("RunService").RenderStepped:Connect(function()
-    local targetPlayer = getClosestToMouse()
+    local targetHead, targetPlayer = getClosestToMouse()
     if targetPlayer and targetPlayer.Character then
         local head = targetPlayer.Character:FindFirstChild("Head")
         if head then
@@ -1361,6 +1362,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
         billboard.Parent = nil
     end
 end)
+
 local mouse = game:GetService("Players").LocalPlayer:GetMouse()
 
 task.spawn(function()
@@ -1373,16 +1375,13 @@ task.spawn(function()
             local waitTime = getgenv().NoFireRateLimit and 0 or (1 / getgenv().FireRate)
             
             if currentTime - lastShotTime >= waitTime then
-                local targetPlayer = getClosestToMouse()
-                if targetPlayer and targetPlayer.Character then
-                    local head = targetPlayer.Character:FindFirstChild("Head")
-                    if head then
-                        for i = 1, 5 do
-                            task.spawn(shoot, head)
-                        end
-                        lastShotTime = currentTime
-                        getgenv().LastShot = currentTime
+                local targetHead, targetPlayer = getClosestToMouse()
+                if targetHead and targetPlayer and targetPlayer.Character then
+                    for i = 1, 5 do
+                        task.spawn(shoot, targetHead)
                     end
+                    lastShotTime = currentTime
+                    getgenv().LastShot = currentTime
                 end
             end
         end
