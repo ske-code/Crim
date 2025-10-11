@@ -76,7 +76,7 @@ local Library = {}
 Library.Open = true
 Library.Accent = Color3.fromRGB(85, 170, 255)
 Library.ScreenGUI = Instance.new("ScreenGui", game:GetService("CoreGui"))
-Library.UIFont = WTF()
+Library.UIFont = Font.new("rbxassetid://12187371840")
 
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
