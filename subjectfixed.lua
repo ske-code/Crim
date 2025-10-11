@@ -870,6 +870,14 @@ function getRandomBulletPosition(targetHead)
     local playerFeetHeight = targetPos.Y - 3
     return Vector3.new(randomPosition.X, playerFeetHeight + 3, randomPosition.Z)
 end
+getgenv().RainbowTracer = false
+RageLeft:AddToggle('fcc', {
+    Text = 'Rainbow tracer',
+    Default = true,
+    Callback = function(Value)
+        getgenv().RainbowTracer = Value
+    end
+})
 function createTracer(startPos, endPos)
     if not getgenv().TracerEnabled then return end
 
@@ -886,7 +894,20 @@ function createTracer(startPos, endPos)
     tracerModel.Name = "TracerBeam"
 
     local beam = Instance.new("Beam")
-    beam.Color = ColorSequence.new(getgenv().TracerColor or Color3.new(1, 0, 0))
+    
+    if getgenv().RainbowTracer then
+        local function getRainbowColor()
+            local time = tick()
+            local r = math.sin(time * 2) * 0.5 + 0.5
+            local g = math.sin(time * 2 + 2) * 0.5 + 0.5
+            local b = math.sin(time * 2 + 4) * 0.5 + 0.5
+            return Color3.new(r, g, b)
+        end
+        beam.Color = ColorSequence.new(getRainbowColor())
+    else
+        beam.Color = ColorSequence.new(getgenv().TracerColor or Color3.new(1, 0, 0))
+    end
+    
     beam.Width0 = getgenv().TracerWidth or 0.3
     beam.Width1 = getgenv().TracerWidth or 0.3
     beam.Texture = "rbxassetid://7136858729"
