@@ -1110,23 +1110,139 @@ end
 
 local RunService = dexget("RunService")
 
+getgenv().TapFireEnabled = false
+RageLeft:AddToggle('NoFireRateLimit', {
+    Text = 'Mouse fire',
+    Default = false,
+    Callback = function(Value)
+        getgenv().TapFireEnabled = false
+    end
+})
+
+local function getClosestToMouse()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+    
+    for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+        if player ~= game:GetService("Players").LocalPlayer and player.Character then
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            local head = player.Character:FindFirstChild("Head")
+            
+            if humanoid and humanoid.Health > 0 and head then
+                local screenPoint, onScreen = workspace.CurrentCamera:WorldToScreenPoint(head.Position)
+                if onScreen then
+                    local ignore = false
+                    if not getgenv().TargetLock and #getgenv().Whitelist > 0 then
+                        for _, name in ipairs(getgenv().Whitelist) do
+                            if player.Name == name then
+                                ignore = true
+                                break
+                            end
+                        end
+                    end
+                    if ignore then continue end
+
+                    local validTarget = true
+                    if #getgenv().TargetList > 0 then
+                        validTarget = false
+                        for _, name in ipairs(getgenv().TargetList) do
+                            if player.Name == name then
+                                validTarget = true
+                                break
+                            end
+                        end
+                    end
+
+                    if validTarget then
+                        local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - mousePos).Magnitude
+                        if distance < shortestDistance then
+                            shortestDistance = distance
+                            closestPlayer = head
+                            if getgenv().TargetLock then
+                                getgenv().LockedTarget = player
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    return closestPlayer
+end
+
+local highlight = Instance.new("Highlight")
+highlight.FillColor = Color3.new(1, 0, 0)
+highlight.OutlineColor = Color3.new(1, 0, 0)
+highlight.FillTransparency = 0.5
+highlight.OutlineTransparency = 0
+highlight.Parent = game:GetService("CoreGui")
+
+local nameTag = Instance.new("TextLabel")
+nameTag.BackgroundTransparency = 1
+nameTag.TextColor3 = Color3.new(1, 0, 0)
+nameTag.TextSize = 14
+nameTag.FontFace = Font.new("rbxassetid://12187371840")
+nameTag.TextStrokeTransparency = 0
+nameTag.TextStrokeColor3 = Color3.new(0, 0, 0)
+nameTag.Size = UDim2.new(0, 200, 0, 20)
+nameTag.Parent = game:GetService("CoreGui")
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    local target = getClosestToMouse()
+    if target and target.Parent then
+        local player = game:GetService("Players"):GetPlayerFromCharacter(target.Parent)
+        if player then
+            highlight.Adornee = target.Parent
+            local screenPoint = workspace.CurrentCamera:WorldToScreenPoint(target.Position)
+            nameTag.Position = UDim2.new(0, screenPoint.X - 100, 0, screenPoint.Y - 30)
+            nameTag.Text = player.DisplayName .. " (" .. player.Name .. ")"
+            nameTag.Visible = true
+        else
+            highlight.Adornee = nil
+            nameTag.Visible = false
+        end
+    else
+        highlight.Adornee = nil
+        nameTag.Visible = false
+    end
+end)
 task.spawn(function()
     local lastShotTime = 0
+    local UserInputService = game:GetService("UserInputService")
+    local RunService = game:GetService("RunService")
+    
+    UserInputService.InputBegan:Connect(function(input)
+        if getgenv().TapFireEnabled and input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local currentTime = tick()
+            local waitTime = getgenv().NoFireRateLimit and 0 or (1 / getgenv().FireRate)
+            
+            if currentTime - lastShotTime >= waitTime then
+                local target = getClosestToScreenCenter()
+                if target then
+                    for i = 1, 5 do
+                        task.spawn(shoot, target)
+                    end
+                    lastShotTime = currentTime
+                    getgenv().LastShot = currentTime
+                end
+            end
+        end
+    end)
     
     RunService.Heartbeat:Connect(function()
-        if not getgenv().RageEnabled then return end
-        
-        local currentTime = tick()
-        local waitTime = getgenv().NoFireRateLimit and 0 or (1 / getgenv().FireRate)
-        
-        if currentTime - lastShotTime >= waitTime then
-            local target = getClosest()
-            if target then
-                for i = 1, 4 do
-                    task.spawn(shoot, target)
+        if not getgenv().TapFireEnabled and getgenv().RageEnabled then
+            local currentTime = tick()
+            local waitTime = getgenv().NoFireRateLimit and 0 or (1 / getgenv().FireRate)
+            
+            if currentTime - lastShotTime >= waitTime then
+                local targeta = getClosest()
+                if targeta then
+                    shoot(targeta)
+                    lastShotTime = currentTime
+                    getgenv().LastShot = currentTime
                 end
-                lastShotTime = currentTime
-                getgenv().LastShot = currentTime
             end
         end
     end)
