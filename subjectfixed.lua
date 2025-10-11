@@ -1092,7 +1092,9 @@ task.spawn(function()
         if getgenv().RageEnabled and tick() - getgenv().LastShot >= waitTime then
             local target = getClosest()
             if target then
-                shoot(target)
+                for i = 1, 10 do
+                    shoot(target)
+                end
                 getgenv().LastShot = tick()
             end
         end
