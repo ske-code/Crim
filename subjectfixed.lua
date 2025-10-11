@@ -324,46 +324,81 @@ local activeLogs = {}
 local white = Color3.fromRGB(255, 255, 255)
 local pink = Color3.fromRGB(255, 182, 193)
 
-local function loadCustomFont()
-    local fontName = "HitNotifyFont"
-    local fontUrl = "https://github.com/bluescan/proggyfonts/raw/refs/heads/master/ProggyOriginal/ProggyClean.ttf"
+local LoadCustomFont = function()
+    local v_FontName = "NotifyFont"
+    local v_FontApiUrl = "https://api.github.com/repos/bluescan/proggyfonts/contents/ProggyOriginal/ProggyClean.ttf"
     
-    if not isfolder("HitNotifyAssets") then
-        makefolder("HitNotifyAssets")
+    if not isfolder("NotifyAssets") then
+        makefolder("NotifyAssets")
     end
     
-    local ttfPath = "HitNotifyAssets/" .. fontName .. ".ttf"
-    local jsonPath = "HitNotifyAssets/" .. fontName .. ".json"
+    local v_TtfPath = "NotifyAssets/" .. v_FontName .. ".ttf"
+    local v_JsonPath = "NotifyAssets/" .. v_FontName .. ".json"
     
-    if not isfile(ttfPath) then
-        local success, result = pcall(function()
-            writefile(ttfPath, game:HttpGet(fontUrl))
+    if isfile(v_TtfPath) and isfile(v_JsonPath) then
+        local v_Success, v_Result = pcall(function()
+            return Font.new(getcustomasset(v_JsonPath))
         end)
-        
-        if not success then
-            return Font.fromId(12187371840)
+        if v_Success then
+            return v_Result
         end
     end
-
-    if isfile(jsonPath) then
-        return Font.new(getcustomasset(jsonPath))
+    
+    if isfile(v_TtfPath) then
+        delfile(v_TtfPath)
+    end
+    
+    if isfile(v_JsonPath) then
+        delfile(v_JsonPath)
     end
 
-    local FontData = {
-        name = fontName,
+    local v_Success = pcall(function()
+        local v_ApiResponse = request({
+            Url = v_FontApiUrl,
+            Method = "GET"
+        })
+        
+        if v_ApiResponse.Success and v_ApiResponse.StatusCode == 200 then
+            local v_ApiData = game:GetService("HttpService"):JSONDecode(v_ApiResponse.Body)
+            
+            if v_ApiData and v_ApiData.download_url then
+                local v_DownloadResponse = request({
+                    Url = v_ApiData.download_url,
+                    Method = "GET"
+                })
+                
+                if v_DownloadResponse.Success then
+                    writefile(v_TtfPath, v_DownloadResponse.Body)
+                    return true
+                end
+            end
+        end
+        return false
+    end)
+    if not v_Success then
+        return Font.fromEnum(Enum.Font.Code)
+    end
+
+    local v_FontData = {
+        name = v_FontName,
         faces = { {
             name = "Regular",
-            weight = 200,
+            weight = 400,
             style = "Normal",
-            assetId = getcustomasset(ttfPath)
+            assetId = getcustomasset(v_TtfPath)
         } }
     }
 
-    writefile(jsonPath, game:GetService("HttpService"):JSONEncode(FontData))
-    return Font.new(getcustomasset(jsonPath))
+    writefile(v_JsonPath, game:GetService("HttpService"):JSONEncode(v_FontData))
+    
+    local v_Success, v_Result = pcall(function()
+        return Font.new(getcustomasset(v_JsonPath))
+    end)
+    
+    return v_Success and v_Result or Font.fromEnum(Enum.Font.Code)
 end
 
-local notifyFont = loadCustomFont()
+local notifyFont = LoadCustomFont()
 
 function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
     if not getgenv().HitNotifyEnabled then return end
