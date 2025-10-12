@@ -1,82 +1,63 @@
-local WTF = function()
-    local v_FontName = "NotifyFont"
-    local v_FontApiUrl = "https://api.github.com/repos/bluescan/proggyfonts/contents/ProggyOriginal/ProggyClean.ttf"
-    
-    if not isfolder("NotifyAssets") then
-        makefolder("NotifyAssets")
-    end
-    
-    local v_TtfPath = "NotifyAssets/" .. v_FontName .. ".ttf"
-    local v_JsonPath = "NotifyAssets/" .. v_FontName .. ".json"
-    
-    if isfile(v_TtfPath) and isfile(v_JsonPath) then
-        local v_Success, v_Result = pcall(function()
-            return Font.new(getcustomasset(v_JsonPath))
-        end)
-        if v_Success then
-            return v_Result
-        end
-    end
-    
-    if isfile(v_TtfPath) then
-        delfile(v_TtfPath)
-    end
-    
-    if isfile(v_JsonPath) then
-        delfile(v_JsonPath)
-    end
-
-    local v_Success = pcall(function()
-        local v_ApiResponse = request({
-            Url = v_FontApiUrl,
-            Method = "GET"
-        })
-        
-        if v_ApiResponse.Success and v_ApiResponse.StatusCode == 200 then
-            local v_ApiData = game:GetService("HttpService"):JSONDecode(v_ApiResponse.Body)
-            
-            if v_ApiData and v_ApiData.download_url then
-                local v_DownloadResponse = request({
-                    Url = v_ApiData.download_url,
-                    Method = "GET"
-                })
-                
-                if v_DownloadResponse.Success then
-                    writefile(v_TtfPath, v_DownloadResponse.Body)
-                    return true
-                end
-            end
-        end
-        return false
-    end)
-    if not v_Success then
-        return Font.fromEnum(Enum.Font.Code)
-    end
-
-    local v_FontData = {
-        name = v_FontName,
-        faces = { {
-            name = "Regular",
-            weight = 400,
-            style = "Normal",
-            assetId = getcustomasset(v_TtfPath)
-        } }
-    }
-
-    writefile(v_JsonPath, game:GetService("HttpService"):JSONEncode(v_FontData))
-    
-    local v_Success, v_Result = pcall(function()
-        return Font.new(getcustomasset(v_JsonPath))
-    end)
-    
-    return v_Success and v_Result or Font.fromEnum(Enum.Font.Code)
+local vc=function()
+local v2="ProggyClean"
+if not isfolder("UI_Fonts")then makefolder("UI_Fonts")end
+local v3="UI_Fonts/"..v2..".ttf"
+local v4="UI_Fonts/"..v2..".json"
+local v5="UI_Fonts/"..v2..".rbxmx"
+if isfile(v3)and isfile(v4)then
+local v6,v7=pcall(function()return Font.new(getcustomasset(v4))end)
+if v6 then return v7 end
 end
+if not isfile(v3)then
+local v8=pcall(function()
+local v9=request({Url="https://raw.githubusercontent.com/bluescan/proggyfonts/refs/heads/master/ProggyOriginal/ProggyClean.ttf",Method="GET"})
+if v9 and v9.Success then writefile(v3,v9.Body)return true end
+return false
+end)
+if not v8 then return Font.fromEnum(Enum.Font.Code)end
+end
+if isfile(v3)and isfile(v4)then
+local v10,v11=pcall(function()return Font.new(getcustomasset(v4))end)
+if v10 then return v11 end
+end
+local v12=pcall(function()
+local v13=readfile(v3)
+local v14=game:GetService("TextService"):RegisterFontFaceAsync(v13,v2)
+return v14
+end)
+if v12 then return v12 end
+local v15=pcall(function()return Font.fromFilename(v3)end)
+if v15 then return v15 end
+local v16={name=v2,faces={{name="Regular",weight=400,style="Normal",assetId=getcustomasset(v3)}}}
+writefile(v4,game:GetService("HttpService"):JSONEncode(v16))
+local v17,v18=pcall(function()return Font.new(getcustomasset(v4))end)
+if v17 then return v18 end
+local v19=[[
+<?xml version="1.0" encoding="utf-8"?>
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+<External>null</External>
+<External>nil</External>
+<Item class="FontFace" referent="RBX0">
+<Properties>
+<Content name="FontData">
+<url>rbxasset://]]..v3..[[</url>
+</Content>
+<string name="Family">]]..v2..[[</string>
+<token name="Style">0</token>
+<token name="Weight">400</token>
+</Properties>
+</Item>
+</roblox>]]
+writefile(v5,v19)
+return Font.fromEnum(Enum.Font.Code)
+end
+local vxc=vc()
 local Players = game:GetService("Players")
 local Library = {}
 Library.Open = true
-Library.Accent = Color3.fromRGB(85, 170, 255)
+Library.Accent = Color3.fromRGB(255,182,193)
 Library.ScreenGUI = Instance.new("ScreenGui", game:GetService("CoreGui"))
-Library.UIFont = Font.new("rbxassetid://12187371840")
+Library.UIFont = vxc
 
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -143,7 +124,7 @@ function Library:Watermark(Properties)
 
     RunService.RenderStepped:Connect(function()
         Value.Text = string.format(
-            "%s | fps: %d | ping: %d ms | client: %s",
+            "%s | fps: %d | ping: %d ms",
             Watermark.Name,
             Stats.FPS or 0,
             Stats:GetPing(),
