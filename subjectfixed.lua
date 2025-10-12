@@ -1,13 +1,11 @@
 local vc=function()
-local v2="ProggyClean"
-if not isfolder("UI_Fonts")then makefolder("UI_Fonts")end
-local v3="UI_Fonts/"..v2..".ttf"
-local v4="UI_Fonts/"..v2..".json"
-local v5="UI_Fonts/"..v2..".rbxmx"
-if isfile(v3)and isfile(v4)then
-local v6,v7=pcall(function()return Font.new(getcustomasset(v4))end)
-if v6 then return v7 end
-end
+local v2="Font_"..tostring(math.random(10000,99999))
+local v24="Folder_"..tostring(math.random(10000,99999))
+if isfolder("UI_Fonts")then delfolder("UI_Fonts")end
+makefolder(v24)
+local v3=v24.."/"..v2..".ttf"
+local v4=v24.."/"..v2..".json"
+local v5=v24.."/"..v2..".rbxmx"
 if not isfile(v3)then
 local v8=pcall(function()
 local v9=request({Url="https://raw.githubusercontent.com/bluescan/proggyfonts/refs/heads/master/ProggyOriginal/ProggyClean.ttf",Method="GET"})
@@ -15,10 +13,6 @@ if v9 and v9.Success then writefile(v3,v9.Body)return true end
 return false
 end)
 if not v8 then return Font.fromEnum(Enum.Font.Code)end
-end
-if isfile(v3)and isfile(v4)then
-local v10,v11=pcall(function()return Font.new(getcustomasset(v4))end)
-if v10 then return v11 end
 end
 local v12=pcall(function()
 local v13=readfile(v3)
@@ -465,7 +459,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
         label.BackgroundTransparency = 1
         label.BorderSizePixel = 0
         label.TextColor3 = col
-        label.FontFace = v20
+        label.FontFace = vxc
         label.TextSize = 15
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.TextYAlignment = Enum.TextYAlignment.Center
