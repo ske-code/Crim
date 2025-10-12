@@ -440,12 +440,15 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
     box.BorderSizePixel = 0
 
     local parts = {
-        {"Hit  ", Color3.fromRGB(255, 255, 255)},
+        {"Hit ", Color3.fromRGB(255, 255, 255)},
+		{" ", Color3.fromRGB(255, 255, 255)},
         {targetName, Color3.fromRGB(255, 182, 193)},
-        {"  ", Color3.fromRGB(255, 255, 255)},
+        {" ", Color3.fromRGB(255, 255, 255)},
         {hp, Color3.fromRGB(255, 182, 193)},
 		{"health", Color3.fromRGB(255, 255, 255)},
-		{" at  ", Color3.fromRGB(255, 255, 255)},
+		{" ", Color3.fromRGB(255, 255, 255)},
+		{"at", Color3.fromRGB(255, 255, 255)},
+		{" ", Color3.fromRGB(255, 255, 255)},
         {distance, Color3.fromRGB(255, 182, 193)}
     }
 
