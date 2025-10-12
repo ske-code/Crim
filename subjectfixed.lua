@@ -1032,29 +1032,25 @@ function createTracer(startPos, endPos)
 
     local offset = getgenv().TracerOffset or Vector3.zero
     startPos = startPos + offset
-    local direction = (endPos - startPos)
 
     if getgenv().RandomTracer then
-        local closestPlayer = getClosest()
-        if closestPlayer and closestPlayer.Character then
-            local humanoidRootPart = closestPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if humanoidRootPart then
-                local playerPos = humanoidRootPart.Position
-                local maxHeight = playerPos.Y + 10
-                local randomHeight = math.random(playerPos.Y, maxHeight)
-                
-                startPos = Vector3.new(
-                    startPos.X + math.random(-5, 5),
-                    randomHeight,
-                    startPos.Z + math.random(-5, 5)
-                )
-                
-                endPos = Vector3.new(
-                    endPos.X + math.random(-3, 3),
-                    randomHeight,
-                    endPos.Z + math.random(-3, 3)
-                )
-            end
+        local targetPart = getClosest()
+        if targetPart then
+            local playerPos = targetPart.Position
+            local maxHeight = playerPos.Y + 10
+            local randomHeight = math.random(playerPos.Y, maxHeight)
+            
+            startPos = Vector3.new(
+                startPos.X + math.random(-5, 5),
+                randomHeight,
+                startPos.Z + math.random(-5, 5)
+            )
+            
+            endPos = Vector3.new(
+                endPos.X + math.random(-3, 3),
+                randomHeight,
+                endPos.Z + math.random(-3, 3)
+            )
         end
     end
 
