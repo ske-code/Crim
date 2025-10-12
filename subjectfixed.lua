@@ -471,7 +471,7 @@ local LoadCustomFont = function()
     return v_Success and v_Result or Font.fromEnum(Enum.Font.Code)
 end
 
-local notifyFont = WTF()
+local notifyFont = Font.new("rbxassetid://12187371840")
 
 function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
     if not getgenv().HitNotifyEnabled then return end
