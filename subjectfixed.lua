@@ -469,9 +469,9 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
         {"Hit target: ", white},
         {targetName.." ", pink},
         {"["..weapon.."] ", white},
-        {"HP:", white},
+        {"Health:", white},
         {hp.." ", pink},
-        {"Dist:"..distance, white}
+        {"at "..distance, white}
     }
 
     local offsetX = 6
@@ -485,7 +485,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
         label.BorderSizePixel = 0
         label.TextColor3 = col
         label.FontFace = v20
-        label.TextSize = 20
+        label.TextSize = 15
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.TextYAlignment = Enum.TextYAlignment.Center
         label.Text = txt
