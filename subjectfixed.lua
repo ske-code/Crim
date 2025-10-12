@@ -431,8 +431,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
     if not getgenv().HitNotifyEnabled then return end
 
     local distance = math.floor((game.Workspace.CurrentCamera.CFrame.Position - hitPosition).Magnitude)
-    local hp = targetHumanoid and tostring(math.floor(targetHumanoid.Health)) or "?"
-    local weapon = tool and tool.Name or "Unknown"
+    local hp = targetHumanoid and math.floor(targetHumanoid.Health) or "?"
 
     local box = Instance.new("Frame")
     box.Parent = logGui
@@ -441,12 +440,13 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
     box.BorderSizePixel = 0
 
     local parts = {
-        {"Hit target: ", white},
-        {targetName.." ", pink},
-        {"["..weapon.."] ", white},
-        {"Health:", white},
-        {hp.." ", pink},
-        {"at "..distance, white}
+        {"Hit ", Color3.fromRGB(255, 255, 255)},
+        {targetName, Color3.fromRGB(255, 182, 193)},
+        {" ", Color3.fromRGB(255, 255, 255)},
+        {hp, Color3.fromRGB(255, 182, 193)},
+		{"health", Color3.fromRGB(255, 255, 255)},
+		{" at", Color3.fromRGB(255, 255, 255)},
+        {distance, Color3.fromRGB(255, 182, 193)}
     }
 
     local offsetX = 6
