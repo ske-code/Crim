@@ -471,7 +471,7 @@ local LoadCustomFont = function()
     return v_Success and v_Result or Font.fromEnum(Enum.Font.Code)
 end
 
-local notifyFont = Font.new("rbxassetid://12187371840")
+local notifyFont = WTF()
 
 function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition, tool)
     if not getgenv().HitNotifyEnabled then return end
@@ -1036,27 +1036,24 @@ function createTracer(startPos, endPos)
 
     if getgenv().RandomTracer then
         local closestPlayer = getClosest()
-        if closestPlayer then
-            local character = closestPlayer.Character
-            if character then
-                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                if humanoidRootPart then
-                    local playerHeight = humanoidRootPart.Position.Y
-                    local maxHeight = playerHeight + 10
-                    local randomHeight = math.random(playerHeight, maxHeight)
-                    
-                    startPos = Vector3.new(
-                        startPos.X + math.random(-5, 5),
-                        randomHeight,
-                        startPos.Z + math.random(-5, 5)
-                    )
-                    
-                    endPos = Vector3.new(
-                        endPos.X + math.random(-3, 3),
-                        randomHeight,
-                        endPos.Z + math.random(-3, 3)
-                    )
-                end
+        if closestPlayer and closestPlayer.Character then
+            local humanoidRootPart = closestPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if humanoidRootPart then
+                local playerPos = humanoidRootPart.Position
+                local maxHeight = playerPos.Y + 10
+                local randomHeight = math.random(playerPos.Y, maxHeight)
+                
+                startPos = Vector3.new(
+                    startPos.X + math.random(-5, 5),
+                    randomHeight,
+                    startPos.Z + math.random(-5, 5)
+                )
+                
+                endPos = Vector3.new(
+                    endPos.X + math.random(-3, 3),
+                    randomHeight,
+                    endPos.Z + math.random(-3, 3)
+                )
             end
         end
     end
