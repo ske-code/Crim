@@ -431,7 +431,7 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
     if not getgenv().HitNotifyEnabled then return end
 
     local distance = math.floor((game.Workspace.CurrentCamera.CFrame.Position - hitPosition).Magnitude)
-    local hp = targetHumanoid and math.floor(targetHumanoid.Health) or "?"
+    local weaponName = tool and tool.Name or "Unknown"
 
     local box = Instance.new("Frame")
     box.Parent = logGui
@@ -440,16 +440,21 @@ function showHitNotify(targetName, damage, hitPart, targetHumanoid, hitPosition,
     box.BorderSizePixel = 0
 
     local parts = {
-        {"Hit ", Color3.fromRGB(255, 255, 255)},
-		{" ", Color3.fromRGB(255, 255, 255)},
+        {"Using", Color3.fromRGB(255, 255, 255)},
+        {" ", Color3.fromRGB(255, 255, 255)},
+        {weaponName, Color3.fromRGB(255, 182, 193)},
+        {" ", Color3.fromRGB(255, 255, 255)},
+        {"to", Color3.fromRGB(255, 255, 255)},
+        {" ", Color3.fromRGB(255, 255, 255)},
+        {"hit", Color3.fromRGB(255, 255, 255)},
+        {" ", Color3.fromRGB(255, 255, 255)},
         {targetName, Color3.fromRGB(255, 182, 193)},
         {" ", Color3.fromRGB(255, 255, 255)},
-        {hp, Color3.fromRGB(255, 182, 193)},
-		{"health", Color3.fromRGB(255, 255, 255)},
-		{" ", Color3.fromRGB(255, 255, 255)},
-		{"at", Color3.fromRGB(255, 255, 255)},
-		{" ", Color3.fromRGB(255, 255, 255)},
-        {distance, Color3.fromRGB(255, 182, 193)}
+        {"on", Color3.fromRGB(255, 255, 255)},
+        {" ", Color3.fromRGB(255, 255, 255)},
+        {distance, Color3.fromRGB(255, 182, 193)},
+        {" ", Color3.fromRGB(255, 255, 255)},
+        {"distance", Color3.fromRGB(255, 255, 255)}
     }
 
     local offsetX = 6
