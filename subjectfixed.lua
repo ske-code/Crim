@@ -3391,3 +3391,102 @@ end)
 
 setupLegitToolMonitoring()
 setupHealthMonitoring()
+
+getgenv().FlyEnabled = false
+getgenv().FlySpeed = 50
+
+PlayerLeft:AddToggle('FlyEnabled', {
+    Text = 'Fly',
+    Default = false,
+    Callback = function(Value)
+        getgenv().FlyEnabled = Value
+        if Value then
+            startFlying()
+        else
+            stopFlying()
+        end
+    end
+})
+
+PlayerLeft:AddSlider('FlySpeed', {
+    Text = 'Fly Speed',
+    Default = 50,
+    Min = 10,
+    Max = 200,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().FlySpeed = Value
+    end
+})
+
+local flying = false
+local flyConnection
+
+local function startFlying()
+    if flying then return end
+    
+    local character = LocalPlayer.Character
+    if not character then return end
+    
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not rootPart then return end
+    
+    flying = true
+    humanoid.PlatformStand = true
+    
+    flyConnection = RunService.Heartbeat:Connect(function()
+        if not flying or not rootPart then
+            stopFlying()
+            return
+        end
+        
+        local cam = workspace.CurrentCamera
+        local camCF = cam.CFrame
+        
+        local lookVector = camCF.LookVector
+        local moveDirection = Vector3.new(lookVector.X, lookVector.Y, lookVector.Z).Unit
+        
+        rootPart.Velocity = moveDirection * getgenv().FlySpeed
+        
+        local args = {
+            "__---r",
+            Vector3.zero,
+            CFrame.new(-4574, 3, -443, 0, 0, 1, 0, 1, 0, -1, 0, 0),
+            false
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("__RZDONL"):FireServer(unpack(args))
+    end)
+end
+
+local function stopFlying()
+    flying = false
+    if flyConnection then
+        flyConnection:Disconnect()
+        flyConnection = nil
+    end
+    
+    local character = LocalPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        
+        if humanoid then
+            humanoid.PlatformStand = false
+        end
+        if rootPart then
+            rootPart.Velocity = Vector3.new(0, 0, 0)
+        end
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    if getgenv().FlyEnabled then
+        task.wait(1)
+        startFlying()
+    end
+end)
+
+LocalPlayer.CharacterRemoving:Connect(function()
+    stopFlying()
+end)
