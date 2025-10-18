@@ -3394,17 +3394,21 @@ setupHealthMonitoring()
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+
 getgenv().FlyEnabled = false
 getgenv().FlySpeed = 50
 
 PlayerLeft:AddToggle('FlyEnabled', {
     Text = 'Fly',
     Default = false,
+    Tooltip = 'Enable flying mode',
     Callback = function(Value)
         getgenv().FlyEnabled = Value
         if Value then
+            Library:Notify("Fly enabled", 2)
             startFlying()
         else
+            Library:Notify("Fly disabled", 2)
             stopFlying()
         end
     end
@@ -3416,6 +3420,7 @@ PlayerLeft:AddSlider('FlySpeed', {
     Min = 10,
     Max = 200,
     Rounding = 0,
+    Tooltip = 'Set fly movement speed',
     Callback = function(Value)
         getgenv().FlySpeed = Value
     end
@@ -3428,17 +3433,23 @@ local function startFlying()
     if flying then return end
     
     local character = LocalPlayer.Character
-    if not character then return end
+    if not character then 
+        Library:Notify("No character found", 2)
+        return 
+    end
     
     local humanoid = character:FindFirstChildOfClass("Humanoid")
     local rootPart = character:FindFirstChild("HumanoidRootPart")
-    if not humanoid or not rootPart then return end
+    if not humanoid or not rootPart then 
+        Library:Notify("Character parts missing", 2)
+        return 
+    end
     
     flying = true
     humanoid.PlatformStand = true
     
-    flyConnection = RunService.Heartbeat:Connect(function()
-        if not flying or not rootPart then
+    flyConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not flying or not rootPart or not getgenv().FlyEnabled then
             stopFlying()
             return
         end
@@ -3459,6 +3470,8 @@ local function startFlying()
         }
         game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("__RZDONL"):FireServer(unpack(args))
     end)
+    
+    Library:Notify("Flying started", 2)
 end
 
 local function stopFlying()
@@ -3480,6 +3493,8 @@ local function stopFlying()
             rootPart.Velocity = Vector3.new(0, 0, 0)
         end
     end
+    
+    Library:Notify("Flying stopped", 2)
 end
 
 LocalPlayer.CharacterAdded:Connect(function(character)
@@ -3492,3 +3507,5 @@ end)
 LocalPlayer.CharacterRemoving:Connect(function()
     stopFlying()
 end)
+
+Toggles.FlyEnabled:SetValue(false)
