@@ -1918,22 +1918,8 @@ LocalPlayer.CharacterRemoving:Connect(function()
     stopFlying()
 end)
 --]]
-local MovementTab = Window:AddTab('Movement')
-local FlyGroup = MovementTab:AddLeftGroupbox('Fly')
 
-getgenv().FlyEnabled = false
-getgenv().FlySpeed = 50
-
-local FlyConnection = nil
-
-local function RemoveRagdolls()
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj.Name == "RagdollAttachment" or obj:IsA("Attachment") and string.find(obj.Name:lower(), "ragdoll") then
-            obj:Destroy()
-        end
-    end
-end
-
+--[[
 local function StartFlying()
     local Player = game.Players.LocalPlayer
     local Char = Player.Character
@@ -2023,6 +2009,172 @@ FlyGroup:AddToggle('NoRagdoll', {
         if State then
             RemoveRagdolls()
         end
+    end
+})
+--]]
+local MovementTab = Window:AddTab('Movement')
+local FlyGroup = MovementTab:AddLeftGroupbox('Fly')
+
+getgenv().FlyEnabled = false
+getgenv().FlySpeed = 50
+
+local FlyConnection = nil
+
+
+
+local function PreventRagdoll()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+    
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+    
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart") or character:FindFirstChild("UpperTorso")
+    if not rootPart then return end
+    
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+            
+            local weld = Instance.new("WeldConstraint")
+            weld.Part0 = part
+            weld.Part1 = rootPart
+            weld.Parent = part
+            weld.Name = "AntiRagdollWeld"
+            
+            for _, attachment in pairs(part:GetChildren()) do
+                if attachment:IsA("Attachment") and string.find(attachment.Name:lower(), "ragdoll") then
+                    local ballSocket = Instance.new("BallSocketConstraint")
+                    ballSocket.Attachment0 = attachment
+                    ballSocket.LimitsEnabled = true
+                    ballSocket.UpperAngle = 5
+                    ballSocket.Parent = part
+                    ballSocket.Name = "AntiRagdollConstraint"
+                end
+            end
+        end
+    end
+end
+
+local function RestoreRagdoll()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+    
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
+    end
+    
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = true
+            
+            for _, constraint in pairs(part:GetChildren()) do
+                if constraint:IsA("WeldConstraint") and constraint.Name == "AntiRagdollWeld" then
+                    constraint:Destroy()
+                end
+                if constraint:IsA("BallSocketConstraint") and constraint.Name == "AntiRagdollConstraint" then
+                    constraint:Destroy()
+                end
+            end
+        end
+    end
+end
+
+local function StartFlying()
+    local Player = game.Players.LocalPlayer
+    local Char = Player.Character
+    if not Char then return end
+    
+    local Hum = Char:FindFirstChildOfClass("Humanoid")
+    local Root = Char:FindFirstChild("HumanoidRootPart")
+    if not Hum or not Root then return end
+    
+    PreventRagdoll()
+    Hum.PlatformStand = true
+    
+    FlyConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not getgenv().FlyEnabled then
+            FlyConnection:Disconnect()
+            Hum.PlatformStand = false
+            Root.Velocity = Vector3.new(0, 0, 0)
+            RestoreRagdoll()
+            return
+        end
+        
+        local IsMoving = Hum.MoveDirection.Magnitude > 0
+        
+        if IsMoving then
+            local Cam = workspace.CurrentCamera
+            local LookVector = Cam.CFrame.LookVector
+            local FlyDirection = Vector3.new(LookVector.X, LookVector.Y, LookVector.Z).Unit
+            
+            Root.Velocity = FlyDirection * getgenv().FlySpeed
+            
+            local SpawnArgs = {
+                "__---r",
+                Vector3.zero,
+                CFrame.new(-4574, 3, -443, 0, 0, 1, 0, 1, 0, -1, 0, 0),
+                false
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("__RZDONL"):FireServer(unpack(SpawnArgs))
+        else
+            Root.Velocity = Vector3.new(0, 0, 0)
+        end
+    end)
+end
+
+local function StopFlying()
+    if FlyConnection then
+        FlyConnection:Disconnect()
+        FlyConnection = nil
+    end
+    
+    local Player = game.Players.LocalPlayer
+    if Player.Character then
+        local Char = Player.Character
+        local Hum = Char:FindFirstChildOfClass("Humanoid")
+        local Root = Char:FindFirstChild("HumanoidRootPart")
+        
+        if Hum then 
+            Hum.PlatformStand = false
+        end
+        if Root then 
+            Root.Velocity = Vector3.new(0, 0, 0)
+        end
+        RestoreRagdoll()
+    end
+end
+
+FlyGroup:AddToggle('FlyToggle', {
+    Text = 'Fly',
+    Default = false,
+    Callback = function(State)
+        getgenv().FlyEnabled = State
+        if State then
+            StartFlying()
+        else
+            StopFlying()
+        end
+    end
+})
+
+FlyGroup:AddSlider('FlySpeed', {
+    Text = 'Fly Speed',
+    Default = 50,
+    Min = 1,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(Value)
+        getgenv().FlySpeed = Value
     end
 })
 local PlayerTab = Window:AddTab('Player')
