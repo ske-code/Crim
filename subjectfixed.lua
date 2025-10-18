@@ -1921,52 +1921,86 @@ end)
 local MovementTab = Window:AddTab('Movement')
 local FlyGroup = MovementTab:AddLeftGroupbox('Fly')
 
-local FlyVelocity = 50
+getgenv().FlyEnabled = false
+getgenv().FlySpeed = 50
+
+local FlyConnection = nil
+
+local function RemoveRagdolls()
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj.Name == "RagdollAttachment" or obj:IsA("Attachment") and string.find(obj.Name:lower(), "ragdoll") then
+            obj:Destroy()
+        end
+    end
+end
+
+local function StartFlying()
+    local Player = game.Players.LocalPlayer
+    local Char = Player.Character
+    if not Char then return end
+    
+    local Hum = Char:FindFirstChildOfClass("Humanoid")
+    local Root = Char:FindFirstChild("HumanoidRootPart")
+    if not Hum or not Root then return end
+    
+    Hum.PlatformStand = true
+    
+    FlyConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not getgenv().FlyEnabled then
+            FlyConnection:Disconnect()
+            Hum.PlatformStand = false
+            Root.Velocity = Vector3.new(0, 0, 0)
+            return
+        end
+        
+        local IsMoving = Hum.MoveDirection.Magnitude > 0
+        
+        if IsMoving then
+            local Cam = workspace.CurrentCamera
+            local LookVector = Cam.CFrame.LookVector
+            local FlyDirection = Vector3.new(LookVector.X, LookVector.Y, LookVector.Z).Unit
+            
+            Root.Velocity = FlyDirection * getgenv().FlySpeed
+            
+            local SpawnArgs = {
+                "__---r",
+                Vector3.zero,
+                CFrame.new(-4574, 3, -443, 0, 0, 1, 0, 1, 0, -1, 0, 0),
+                false
+            }
+            game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("__RZDONL"):FireServer(unpack(SpawnArgs))
+        else
+            Root.Velocity = Vector3.new(0, 0, 0)
+        end
+    end)
+end
+
+local function StopFlying()
+    if FlyConnection then
+        FlyConnection:Disconnect()
+        FlyConnection = nil
+    end
+    
+    local Player = game.Players.LocalPlayer
+    if Player.Character then
+        local Char = Player.Character
+        local Hum = Char:FindFirstChildOfClass("Humanoid")
+        local Root = Char:FindFirstChild("HumanoidRootPart")
+        
+        if Hum then Hum.PlatformStand = false end
+        if Root then Root.Velocity = Vector3.new(0, 0, 0) end
+    end
+end
 
 FlyGroup:AddToggle('FlyToggle', {
-    Text = 'Fly Bypass',
+    Text = 'Fly',
     Default = false,
     Callback = function(State)
+        getgenv().FlyEnabled = State
         if State then
-            local Char = LocalPlayer.Character
-            if not Char then return end
-            
-            local Hum = Char:FindFirstChildOfClass("Humanoid")
-            local Root = Char:FindFirstChild("HumanoidRootPart")
-            if not Hum or not Root then return end
-            
-            Hum.PlatformStand = true
-            
-            local FlyLoop = game:GetService("RunService").Heartbeat:Connect(function()
-                if not Toggles.FlyToggle.Value then
-                    FlyLoop:Disconnect()
-                    if Hum then Hum.PlatformStand = false end
-                    if Root then Root.Velocity = Vector3.new(0, 0, 0) end
-                    return
-                end
-                
-                local Cam = workspace.CurrentCamera
-                local Direction = Cam.CFrame.LookVector
-                
-                Root.Velocity = Direction * FlyVelocity
-                
-                local SpawnArgs = {
-                    "__---r",
-                    Vector3.zero,
-                    CFrame.new(-4574, 3, -443, 0, 0, 1, 0, 1, 0, -1, 0, 0),
-                    false
-                }
-                game:GetService("ReplicatedStorage").Events.__RZDONL:FireServer(unpack(SpawnArgs))
-            end)
+            StartFlying()
         else
-            local Char = LocalPlayer.Character
-            if Char then
-                local Hum = Char:FindFirstChildOfClass("Humanoid")
-                local Root = Char:FindFirstChild("HumanoidRootPart")
-                
-                if Hum then Hum.PlatformStand = false end
-                if Root then Root.Velocity = Vector3.new(0, 0, 0) end
-            end
+            StopFlying()
         end
     end
 })
@@ -1978,7 +2012,17 @@ FlyGroup:AddSlider('FlySpeed', {
     Max = 100,
     Rounding = 0,
     Callback = function(Value)
-        FlyVelocity = Value
+        getgenv().FlySpeed = Value
+    end
+})
+
+FlyGroup:AddToggle('NoRagdoll', {
+    Text = 'No Ragdoll',
+    Default = false,
+    Callback = function(State)
+        if State then
+            RemoveRagdolls()
+        end
     end
 })
 local PlayerTab = Window:AddTab('Player')
