@@ -995,25 +995,21 @@ function createTracer(startPos, endPos)
     local offset = getgenv().TracerOffset or Vector3.zero
     startPos = startPos + offset
 
+    
     if getgenv().RandomTracer then
-        local targetPart = getClosest()
-        if targetPart then
-            local playerPos = targetPart.Position
-            local maxHeight = playerPos.Y + 10
-            local randomHeight = math.random(playerPos.Y, maxHeight)
-            
-            startPos = Vector3.new(
-                startPos.X + math.random(-5, 5),
-                randomHeight,
-                startPos.Z + math.random(-5, 5)
-            )
-            
-            endPos = Vector3.new(
-                endPos.X + math.random(-3, 3),
-                randomHeight,
-                endPos.Z + math.random(-3, 3)
-            )
-        end
+        local offset = getgenv().RandomTracerOffset or 5
+        
+        startPos = Vector3.new(
+            startPos.X + math.random(-offset, offset),
+            startPos.Y + math.random(-offset, offset),
+            startPos.Z + math.random(-offset, offset)
+        )
+        
+        endPos = Vector3.new(
+            endPos.X + math.random(-offset, offset),
+            endPos.Y + math.random(-offset, offset),
+            endPos.Z + math.random(-offset, offset)
+        )
     end
 
     local tracerModel = Instance.new("Model")
