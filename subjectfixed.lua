@@ -1815,6 +1815,107 @@ LocalPlayer.CharacterAdded:Connect(function()
         updateESP()
     end
 end)
+local ArmGroup = VisualTab:AddLeftGroupbox('Arm Rotation')
+
+getgenv().ArmRotationEnabled = false
+getgenv().ArmRotationSpeed = 1
+
+local ArmRotationConnection = nil
+
+local function CreateArmRotator()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+    
+    local leftArm = character:FindFirstChild("LeftUpperArm") or character:FindFirstChild("Left Arm")
+    local rightArm = character:FindFirstChild("RightUpperArm") or character:FindFirstChild("Right Arm")
+    local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
+    
+    if not leftArm or not rightArm or not torso then return end
+    
+    local leftMotor = Instance.new("Motor6D")
+    leftMotor.Name = "ArmRotatorLeftMotor"
+    leftMotor.Part0 = torso
+    leftMotor.Part1 = leftArm
+    leftMotor.C0 = CFrame.new(-1.5, 0.5, 0) * CFrame.Angles(math.rad(90), 0, math.rad(-45))
+    leftMotor.C1 = CFrame.new(0, 0.5, 0)
+    leftMotor.Parent = torso
+    
+    local rightMotor = Instance.new("Motor6D")
+    rightMotor.Name = "ArmRotatorRightMotor"
+    rightMotor.Part0 = torso
+    rightMotor.Part1 = rightArm
+    rightMotor.C0 = CFrame.new(1.5, 0.5, 0) * CFrame.Angles(math.rad(90), 0, math.rad(45))
+    rightMotor.C1 = CFrame.new(0, 0.5, 0)
+    rightMotor.Parent = torso
+    
+    return leftMotor, rightMotor
+end
+
+local function RemoveArmRotator()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+    
+    for _, part in pairs(character:GetDescendants()) do
+        if part:IsA("Motor6D") and (part.Name == "ArmRotatorLeftMotor" or part.Name == "ArmRotatorRightMotor") then
+            part:Destroy()
+        end
+    end
+end
+
+local function StartArmRotation()
+    if ArmRotationConnection then
+        ArmRotationConnection:Disconnect()
+    end
+    
+    local leftMotor, rightMotor = CreateArmRotator()
+    if not leftMotor or not rightMotor then return end
+    
+    ArmRotationConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not getgenv().ArmRotationEnabled then
+            ArmRotationConnection:Disconnect()
+            RemoveArmRotator()
+            return
+        end
+        
+        local rotation = tick() * getgenv().ArmRotationSpeed
+        leftMotor.C0 = CFrame.new(-1.5, 0.5, 0) * CFrame.Angles(math.rad(90), 0, math.rad(-45) + rotation)
+        rightMotor.C0 = CFrame.new(1.5, 0.5, 0) * CFrame.Angles(math.rad(90), 0, math.rad(45) + rotation)
+    end)
+end
+
+local function StopArmRotation()
+    if ArmRotationConnection then
+        ArmRotationConnection:Disconnect()
+        ArmRotationConnection = nil
+    end
+    RemoveArmRotator()
+end
+
+ArmGroup:AddToggle('ArmRotationToggle', {
+    Text = 'Arm Rotation',
+    Default = false,
+    Callback = function(State)
+        getgenv().ArmRotationEnabled = State
+        if State then
+            StartArmRotation()
+        else
+            StopArmRotation()
+        end
+    end
+})
+
+ArmGroup:AddSlider('ArmRotationSpeed', {
+    Text = 'Rotation Speed',
+    Default = 1,
+    Min = 0.1,
+    Max = 5,
+    Rounding = 1,
+    Callback = function(Value)
+        getgenv().ArmRotationSpeed = Value
+    end
+})
 --[[
 local MovementTab = Window:AddTab('Movement')
 local MovementLeft = MovementTab:AddLeftGroupbox('Fly Settings')
