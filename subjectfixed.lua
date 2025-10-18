@@ -3391,7 +3391,9 @@ end)
 
 setupLegitToolMonitoring()
 setupHealthMonitoring()
-
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 getgenv().FlyEnabled = false
 getgenv().FlySpeed = 50
 
