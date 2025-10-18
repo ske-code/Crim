@@ -1815,6 +1815,7 @@ LocalPlayer.CharacterAdded:Connect(function()
         updateESP()
     end
 end)
+--[[
 local MovementTab = Window:AddTab('Movement')
 local MovementLeft = MovementTab:AddLeftGroupbox('Fly Settings')
 
@@ -1916,6 +1917,70 @@ end)
 LocalPlayer.CharacterRemoving:Connect(function()
     stopFlying()
 end)
+--]]
+local MovementTab = Window:AddTab('Movement')
+local FlyGroup = MovementTab:AddLeftGroupbox('Fly')
+
+local FlyVelocity = 50
+
+FlyGroup:AddToggle('FlyToggle', {
+    Text = 'Fly Bypass',
+    Default = false,
+    Callback = function(State)
+        if State then
+            local Char = LocalPlayer.Character
+            if not Char then return end
+            
+            local Hum = Char:FindFirstChildOfClass("Humanoid")
+            local Root = Char:FindFirstChild("HumanoidRootPart")
+            if not Hum or not Root then return end
+            
+            Hum.PlatformStand = true
+            
+            local FlyLoop = game:GetService("RunService").Heartbeat:Connect(function()
+                if not Toggles.FlyToggle.Value then
+                    FlyLoop:Disconnect()
+                    if Hum then Hum.PlatformStand = false end
+                    if Root then Root.Velocity = Vector3.new(0, 0, 0) end
+                    return
+                end
+                
+                local Cam = workspace.CurrentCamera
+                local Direction = Cam.CFrame.LookVector
+                
+                Root.Velocity = Direction * FlyVelocity
+                
+                local SpawnArgs = {
+                    "__---r",
+                    Vector3.zero,
+                    CFrame.new(-4574, 3, -443, 0, 0, 1, 0, 1, 0, -1, 0, 0),
+                    false
+                }
+                game:GetService("ReplicatedStorage").Events.__RZDONL:FireServer(unpack(SpawnArgs))
+            end)
+        else
+            local Char = LocalPlayer.Character
+            if Char then
+                local Hum = Char:FindFirstChildOfClass("Humanoid")
+                local Root = Char:FindFirstChild("HumanoidRootPart")
+                
+                if Hum then Hum.PlatformStand = false end
+                if Root then Root.Velocity = Vector3.new(0, 0, 0) end
+            end
+        end
+    end
+})
+
+FlyGroup:AddSlider('FlySpeed', {
+    Text = 'Fly Speed',
+    Default = 50,
+    Min = 1,
+    Max = 100,
+    Rounding = 0,
+    Callback = function(Value)
+        FlyVelocity = Value
+    end
+})
 local PlayerTab = Window:AddTab('Player')
 local PlayerLeft = PlayerTab:AddLeftGroupbox('Player Functions')
 
