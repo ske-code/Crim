@@ -212,23 +212,23 @@ function l_49:Page(l_80)
     l_83.pages[#l_83.pages+1]=l_84
     
     function l_84:Show()
-        for _, page in pairs(l_83.pages) do
-            page.page_button.BackgroundColor3=l_28.dark_contrast
-            page.open=false
-            for _, section in pairs(page.sections) do
-                section.section_frame.Visible=false
-            end
+    for _, page in pairs(l_83.pages) do
+        page.page_button.BackgroundColor3 = l_28.dark_contrast
+        page.open = false
+        for _, section in pairs(page.sections) do
+            section.section_frame.Visible = false
         end
-        
-        l_83.currentPage=l_84
-        l_85.BackgroundColor3=l_28.accent
-        l_84.open=true
-        
-        for _, section in pairs(l_84.sections) do
-            section.section_frame.Visible=true
-        end
-        
-        l_83:UpdateScrollSize()
+    end
+    
+    l_83.currentPage = l_84
+    l_85.BackgroundColor3 = l_28.accent
+    l_84.open = true
+    
+    for _, section in pairs(l_84.sections) do
+        section.section_frame.Visible = true
+    end
+    
+    l_83:UpdateScrollSize()
     end
     
     l_85.MouseButton1Click:Connect(function()
