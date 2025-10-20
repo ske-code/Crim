@@ -192,39 +192,52 @@ function l_27:New(l_51)
 end
 
 function l_49:Page(l_80)
-    local l_81=l_80 or{}
-    local l_82=l_81.name or l_81.Name or l_81.title or l_81.Title or"New Page"
-    local l_83=self
-    local l_84={open=false,sections={},window=l_83}
-    local l_85=l_29("TextButton",{
-        Name=l_82.."Page",
-        Text=l_82,
-        TextSize=l_28.textsize,
-        FontFace=l_28.font,
-        TextColor3=l_28.textcolor,
-        BackgroundColor3=l_28.dark_contrast,
-        BorderSizePixel=0,
-        Size=UDim2.new(0,80,0,20),
-        Position=UDim2.new(0,10+(#l_83.pages*85),0,2),
-        Parent=l_83.tab_holder
+    local l_81 = l_80 or {}
+    local l_82 = l_81.name or l_81.Name or l_81.title or l_81.Title or "New Page"
+    local l_83 = self
+    local l_84 = {open = false, sections = {}, window = l_83, name = l_82, contentFrame = nil}
+    
+    local l_85 = l_29("TextButton",{
+        Name = l_82.."Page",
+        Text = l_82,
+        TextSize = l_28.textsize,
+        FontFace = l_28.font,
+        TextColor3 = l_28.textcolor,
+        BackgroundColor3 = l_28.dark_contrast,
+        BorderSizePixel = 0,
+        Size = UDim2.new(0, 80, 0, 20),
+        Position = UDim2.new(0, 10 + (#l_83.pages * 85), 0, 2),
+        Parent = l_83.tab_holder
     })
-    l_84.page_button=l_85
-    l_83.pages[#l_83.pages+1]=l_84
+    
+    l_84.page_button = l_85
+    
+    local l_210 = l_29("Frame",{
+        Name = l_82.."Content",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        Visible = false,
+        Parent = l_83.scroll_frame
+    })
+    
+    l_84.contentFrame = l_210
+    l_83.pages[#l_83.pages + 1] = l_84
     
     function l_84:Show()
-        if l_83.currentPage then
-            l_83.currentPage.page_button.BackgroundColor3=l_28.dark_contrast
-            l_83.currentPage.open=false
-            for l_86,l_87 in pairs(l_83.currentPage.sections)do
-                l_87.section_frame.Visible=false
+        for _, page in pairs(l_83.pages) do
+            page.page_button.BackgroundColor3 = l_28.dark_contrast
+            page.open = false
+            if page.contentFrame then
+                page.contentFrame.Visible = false
             end
         end
-        l_83.currentPage=l_84
-        l_85.BackgroundColor3=l_28.accent
-        l_84.open=true
-        for l_88,l_89 in pairs(l_84.sections)do
-            l_89.section_frame.Visible=true
-        end
+        
+        l_83.currentPage = l_84
+        l_85.BackgroundColor3 = l_28.accent
+        l_84.open = true
+        l_210.Visible = true
+        
         l_83:UpdateScrollSize()
     end
     
@@ -232,85 +245,94 @@ function l_49:Page(l_80)
         l_84:Show()
     end)
     
-    if#l_83.pages==1 then
+    if #l_83.pages == 1 then
         l_84:Show()
     end
     
-    return setmetatable(l_84,l_49)
+    return setmetatable(l_84, l_49)
 end
 
 function l_49:Section(l_90)
-    local l_91=l_90 or{}
-    local l_92=l_91.name or l_91.Name or l_91.title or l_91.Title or"New Section"
-    local l_93=l_91.side or"left"
-    local l_94=self.window
-    local l_95=self
-    local l_96={window=l_94,page=l_95,currentAxis=20,side=l_93}
-    local l_97=l_29("Frame",{
-        Name=l_92.."Section",
-        BackgroundColor3=l_28.inline,
-        BorderSizePixel=0,
-        Size=UDim2.new(0.5,-7,0,200),
-        Position=l_93=="right"and UDim2.new(0.5,2,0,30)or UDim2.new(0,5,0,30),
-        Visible=l_95.open,
-        Parent=l_94.tab_frame
+    local l_91 = l_90 or {}
+    local l_92 = l_91.name or l_91.Name or l_91.title or l_91.Title or "New Section"
+    local l_93 = l_91.side or "left"
+    local l_94 = self.window
+    local l_95 = self
+    local l_96 = {window = l_94, page = l_95, currentAxis = 20, side = l_93}
+    
+    local l_97 = l_29("Frame",{
+        Name = l_92.."Section",
+        BackgroundColor3 = l_28.inline,
+        BorderSizePixel = 0,
+        Size = UDim2.new(0.5, -7, 0, 200),
+        Position = l_93 == "right" and UDim2.new(0.5, 2, 0, 30) or UDim2.new(0, 5, 0, 30),
+        Visible = l_95.open,
+        Parent = l_95.contentFrame
     })
-    local l_98=l_29("Frame",{
-        Name="section_outline",
-        BackgroundColor3=l_28.outline,
-        BorderSizePixel=0,
-        Size=UDim2.new(1,-2,1,-2),
-        Position=UDim2.new(0,1,0,1),
-        Visible=l_95.open,
-        Parent=l_97
+    
+    local l_98 = l_29("Frame",{
+        Name = "section_outline",
+        BackgroundColor3 = l_28.outline,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, -2, 1, -2),
+        Position = UDim2.new(0, 1, 0, 1),
+        Parent = l_97
     })
-    local l_99=l_29("Frame",{
-        Name="section_frame",
-        BackgroundColor3=l_28.dark_contrast,
-        BorderSizePixel=0,
-        Size=UDim2.new(1,-2,1,-2),
-        Position=UDim2.new(0,1,0,1),
-        Visible=l_95.open,
-        Parent=l_98
+    
+    local l_99 = l_29("Frame",{
+        Name = "section_frame",
+        BackgroundColor3 = l_28.dark_contrast,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, -2, 1, -2),
+        Position = UDim2.new(0, 1, 0, 1),
+        Parent = l_98
     })
-    local l_100=l_29("Frame",{
-        Name="section_accent",
-        BackgroundColor3=l_28.accent,
-        BorderSizePixel=0,
-        Size=UDim2.new(1,0,0,2),
-        Position=UDim2.new(0,0,0,0),
-        Visible=l_95.open,
-        Parent=l_99
+    
+    local l_100 = l_29("Frame",{
+        Name = "section_accent",
+        BackgroundColor3 = l_28.accent,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 2),
+        Position = UDim2.new(0, 0, 0, 0),
+        Parent = l_99
     })
-    local l_101=l_29("TextLabel",{
-        Name="section_title",
-        Text=l_92,
-        TextSize=l_28.textsize,
-        FontFace=l_28.font,
-        TextColor3=l_28.textcolor,
-        BackgroundTransparency=1,
-        Size=UDim2.new(1,0,0,15),
-        Position=UDim2.new(0,3,0,3),
-        TextXAlignment=Enum.TextXAlignment.Left,
-        Visible=l_95.open,
-        Parent=l_99
+    
+    local l_101 = l_29("TextLabel",{
+        Name = "section_title",
+        Text = l_92,
+        TextSize = l_28.textsize,
+        FontFace = l_28.font,
+        TextColor3 = l_28.textcolor,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 15),
+        Position = UDim2.new(0, 3, 0, 3),
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Parent = l_99
     })
-    l_96.section_frame=l_99
-    l_95.sections[#l_95.sections+1]=l_96
+    
+    l_96.section_frame = l_97
+    l_95.sections[#l_95.sections + 1] = l_96
     
     function l_96:Update()
-        local l_164=0
-        for l_165,l_166 in pairs(l_95.sections)do
-            if l_166.side==l_93 then
-                l_164=l_164+l_166.currentAxis+25
+        local yPosition = 0
+        for _, section in pairs(l_95.sections) do
+            if section.side == l_93 then
+                if section == l_96 then
+                    break
+                else
+                    yPosition = yPosition + section.currentAxis + 25
+                end
             end
         end
-        l_97.Size=UDim2.new(0.5,-7,0,l_164)
+        
+        l_97.Position = l_93 == "right" and UDim2.new(0.5, 2, 0, yPosition) or UDim2.new(0, 5, 0, yPosition)
+        l_97.Size = UDim2.new(0.5, -7, 0, l_96.currentAxis + 25)
+        
         l_94:UpdateScrollSize()
     end
     
     l_96:Update()
-    return setmetatable(l_96,l_50)
+    return setmetatable(l_96, l_50)
 end
 
 function l_50:Label(l_167)
