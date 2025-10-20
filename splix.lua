@@ -192,51 +192,41 @@ function l_27:New(l_51)
 end
 
 function l_49:Page(l_80)
-    local l_81 = l_80 or {}
-    local l_82 = l_81.name or l_81.Name or l_81.title or l_81.Title or "New Page"
-    local l_83 = self
-    local l_84 = {open = false, sections = {}, window = l_83, name = l_82, contentFrame = nil}
-    
-    local l_85 = l_29("TextButton",{
-        Name = l_82.."Page",
-        Text = l_82,
-        TextSize = l_28.textsize,
-        FontFace = l_28.font,
-        TextColor3 = l_28.textcolor,
-        BackgroundColor3 = l_28.dark_contrast,
-        BorderSizePixel = 0,
-        Size = UDim2.new(0, 80, 0, 20),
-        Position = UDim2.new(0, 10 + (#l_83.pages * 85), 0, 2),
-        Parent = l_83.tab_holder
+    local l_81=l_80 or{}
+    local l_82=l_81.name or l_81.Name or l_81.title or l_81.Title or"New Page"
+    local l_83=self
+    local l_84={open=false,sections={},window=l_83}
+    local l_85=l_29("TextButton",{
+        Name=l_82.."Page",
+        Text=l_82,
+        TextSize=l_28.textsize,
+        FontFace=l_28.font,
+        TextColor3=l_28.textcolor,
+        BackgroundColor3=l_28.dark_contrast,
+        BorderSizePixel=0,
+        Size=UDim2.new(0,80,0,20),
+        Position=UDim2.new(0,10+(#l_83.pages*85),0,2),
+        Parent=l_83.tab_holder
     })
-    
-    l_84.page_button = l_85
-    
-    local l_210 = l_29("Frame",{
-        Name = l_82.."Content",
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        Visible = false,
-        Parent = l_83.scroll_frame
-    })
-    
-    l_84.contentFrame = l_210
-    l_83.pages[#l_83.pages + 1] = l_84
+    l_84.page_button=l_85
+    l_83.pages[#l_83.pages+1]=l_84
     
     function l_84:Show()
         for _, page in pairs(l_83.pages) do
-            page.page_button.BackgroundColor3 = l_28.dark_contrast
-            page.open = false
-            if page.contentFrame then
-                page.contentFrame.Visible = false
+            page.page_button.BackgroundColor3=l_28.dark_contrast
+            page.open=false
+            for _, section in pairs(page.sections) do
+                section.section_frame.Visible=false
             end
         end
         
-        l_83.currentPage = l_84
-        l_85.BackgroundColor3 = l_28.accent
-        l_84.open = true
-        l_210.Visible = true
+        l_83.currentPage=l_84
+        l_85.BackgroundColor3=l_28.accent
+        l_84.open=true
+        
+        for _, section in pairs(l_84.sections) do
+            section.section_frame.Visible=true
+        end
         
         l_83:UpdateScrollSize()
     end
@@ -245,11 +235,11 @@ function l_49:Page(l_80)
         l_84:Show()
     end)
     
-    if #l_83.pages == 1 then
+    if#l_83.pages==1 then
         l_84:Show()
     end
     
-    return setmetatable(l_84, l_49)
+    return setmetatable(l_84,l_49)
 end
 
 function l_49:Section(l_90)
@@ -314,7 +304,7 @@ function l_49:Section(l_90)
     l_95.sections[#l_95.sections + 1] = l_96
     
     function l_96:Update()
-        local yPosition = 0
+        local yPosition = 25
         for _, section in pairs(l_95.sections) do
             if section.side == l_93 then
                 if section == l_96 then
