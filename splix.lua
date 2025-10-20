@@ -407,6 +407,9 @@ local l_198=self
 local l_199={open=false,selected=l_193,options=l_192,axis=l_198.currentAxis}
 
 local function updateText()
+if type(l_199.selected)~="table"then
+l_199.selected={}
+end
 local txt=table.concat(l_199.selected,", ")
 if#txt>30 then txt=string.sub(txt,1,27).."..."
 end
@@ -462,10 +465,16 @@ Parent=l_202
 })
 
 function l_199:Get()
+if type(l_199.selected)~="table"then
+l_199.selected={}
+end
 return l_199.selected
 end
 
 function l_199:Set(vals)
+if type(vals)~="table"then
+vals={vals}
+end
 l_199.selected=vals
 l_202.Text=updateText()
 l_194(l_199.selected)
@@ -485,7 +494,9 @@ Parent=l_200
 })
 for l_206,l_207 in pairs(l_192)do
 local isSel=false
+if type(l_199.selected)=="table"then
 for _,v in ipairs(l_199.selected)do if v==l_207 then isSel=true break end end
+end
 local l_208=l_29("TextButton",{
 Name="option_"..l_207,
 Text=l_207,
@@ -501,6 +512,9 @@ TextXAlignment=Enum.TextXAlignment.Left,
 Parent=l_205
 })
 l_208.MouseButton1Click:Connect(function()
+if type(l_199.selected)~="table"then
+l_199.selected={}
+end
 local exists=false
 for i,v in ipairs(l_199.selected)do
 if v==l_207 then table.remove(l_199.selected,i) exists=true break end
@@ -510,7 +524,9 @@ l_202.Text=updateText()
 for _,btn in pairs(l_205:GetChildren())do
 if btn:IsA("TextButton")then
 local selectedNow=false
+if type(l_199.selected)=="table"then
 for _,s in ipairs(l_199.selected)do if s==btn.Text then selectedNow=true break end end
+end
 btn.BackgroundColor3=selectedNow and l_28.accent or l_28.light_contrast
 end
 end
@@ -535,7 +551,6 @@ l_198.currentAxis=l_198.currentAxis+24
 l_198:Update()
 return l_199
 end
-
 
 function l_50:Checkbox(l_102)
     local l_103=l_102 or{}
