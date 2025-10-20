@@ -211,13 +211,26 @@ function l_49:Page(l_80)
         Parent = l_83.tab_holder
     })
 
+    local l_86 = l_29("Frame", {
+        Name = l_82.."ContentFrame",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, -30),
+        Position = UDim2.new(0, 0, 0, 30),
+        Visible = false,
+        Parent = l_83.content_holder
+    })
+
     l_84.page_button = l_85
+    l_84.contentFrame = l_86
     l_83.pages[#l_83.pages + 1] = l_84
 
     function l_84:Show()
         for _, page in pairs(l_83.pages) do
             page.page_button.BackgroundColor3 = l_28.dark_contrast
             page.open = false
+            if page.contentFrame then
+                page.contentFrame.Visible = false
+            end
             for _, section in pairs(page.sections) do
                 section.section_frame.Visible = false
             end
@@ -226,6 +239,10 @@ function l_49:Page(l_80)
         l_83.currentPage = l_84
         l_85.BackgroundColor3 = l_28.accent
         l_84.open = true
+
+        if l_84.contentFrame then
+            l_84.contentFrame.Visible = true
+        end
 
         for _, section in pairs(l_84.sections) do
             section.section_frame.Visible = true
