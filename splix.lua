@@ -212,20 +212,24 @@ function l_49:Page(l_80)
     l_83.pages[#l_83.pages+1]=l_84
     
     function l_84:Show()
-        if l_83.currentPage then
-            l_83.currentPage.page_button.BackgroundColor3=l_28.dark_contrast
-            l_83.currentPage.open=false
-            for l_86,l_87 in pairs(l_83.currentPage.sections)do
-                l_87.section_frame.Visible=false
-            end
+    if l_83.currentPage then
+        l_83.currentPage.page_button.BackgroundColor3=l_28.dark_contrast
+        l_83.currentPage.open=false
+        if l_83.currentPage.contentFrame then
+            l_83.currentPage.contentFrame.Visible = false
         end
-        l_83.currentPage=l_84
-        l_85.BackgroundColor3=l_28.accent
-        l_84.open=true
-        for l_88,l_89 in pairs(l_84.sections)do
-            l_89.section_frame.Visible=true
-        end
-        l_83:UpdateScrollSize()
+    end
+    
+    l_83.currentPage=l_84
+    l_85.BackgroundColor3=l_28.accent
+    l_84.open=true
+    
+    
+    if l_84.contentFrame then
+        l_84.contentFrame.Visible = true
+    end
+    
+    l_83:UpdateScrollSize()
     end
     
     l_85.MouseButton1Click:Connect(function()
@@ -246,6 +250,16 @@ function l_49:Section(l_90)
     local l_94=self.window
     local l_95=self
     local l_96={window=l_94,page=l_95,currentAxis=20,side=l_93}
+    if not l_95.contentFrame then
+        l_95.contentFrame = l_29("Frame",{
+            Name = "page_content",
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 1, 0),
+            Position = UDim2.new(0, 0, 0, 0),
+            Visible = l_95.open,
+            Parent = l_94.scroll_frame
+        })
+    end
     local l_97=l_29("Frame",{
         Name=l_92.."Section",
         BackgroundColor3=l_28.inline,
@@ -253,7 +267,7 @@ function l_49:Section(l_90)
         Size=UDim2.new(0.5,-7,0,200),
         Position=l_93=="right"and UDim2.new(0.5,2,0,30)or UDim2.new(0,5,0,30),
         Visible=l_95.open,
-        Parent=l_94.tab_frame
+        Parent=l_95.contentFrame
     })
     local l_98=l_29("Frame",{
         Name="section_outline",
