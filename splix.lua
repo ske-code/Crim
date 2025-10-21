@@ -122,7 +122,7 @@ function l_27:New(l_51)
     local l_65=l_29("ScrollingFrame",{
         Name="tab_frame_inline",
         Size=UDim2.new(1,-8,1,-28),
-        Position=UDim2.new(0,4,0,70),  -- 下移避免遮挡水印
+        Position=UDim2.new(0,4,0,70),  
 
         BackgroundColor3=l_28.outline,
         BorderSizePixel=0,
@@ -199,7 +199,7 @@ function l_49:Watermark(cfg)
     local txt = opt.text or "Splix UI"
     local win = self
 
-    -- 外层 Outline
+    
     local wm_outline = l_29("Frame", {
         Name = "watermark_outline",
         BackgroundColor3 = l_28.outline,
@@ -209,7 +209,7 @@ function l_49:Watermark(cfg)
         Parent = win.back_frame
     })
 
-    -- Inline
+    
     local wm_inline = l_29("Frame", {
         BackgroundColor3 = l_28.inline,
         BorderSizePixel = 0,
@@ -218,7 +218,7 @@ function l_49:Watermark(cfg)
         Parent = wm_outline
     })
 
-    -- 内层框
+
     local wm_inner = l_29("Frame", {
         BackgroundColor3 = l_28.light_contrast,
         BorderSizePixel = 0,
@@ -227,7 +227,7 @@ function l_49:Watermark(cfg)
         Parent = wm_inline
     })
 
-    -- 顶部细线（Accent）
+    
     local wm_line = l_29("Frame", {
         BackgroundColor3 = l_28.accent,
         BorderSizePixel = 0,
@@ -236,7 +236,7 @@ function l_49:Watermark(cfg)
         Parent = wm_inner
     })
 
-    -- 文本
+    
     local wm_label = l_29("TextLabel", {
         Text = txt,
         TextSize = l_28.textsize + 1,
@@ -251,7 +251,7 @@ function l_49:Watermark(cfg)
         Name = "watermark_label"
     })
 
-    -- Toggle 按钮在水印下方
+    
     local toggle = l_29("TextButton", {
         Name = "toggle_ui_button",
         Text = "Toggle UI",
