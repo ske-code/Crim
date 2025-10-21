@@ -122,7 +122,7 @@ function l_27:New(l_51)
     local l_65=l_29("ScrollingFrame",{
         Name="tab_frame_inline",
         Size=UDim2.new(1,-8,1,-28),
-        Position=UDim2.new(0,4,0,70),  
+        Position=UDim2.new(0,4,0,40),  
 
         BackgroundColor3=l_28.outline,
         BorderSizePixel=0,
@@ -206,7 +206,7 @@ function l_49:Watermark(cfg)
         BorderSizePixel = 0,
         Size = UDim2.new(0, 160, 0, 28),
         Position = UDim2.new(0, 6, 0, 6),
-        Parent = win.back_frame
+        Parent = win.gui  
     })
 
     
@@ -218,7 +218,7 @@ function l_49:Watermark(cfg)
         Parent = wm_outline
     })
 
-
+    
     local wm_inner = l_29("Frame", {
         BackgroundColor3 = l_28.light_contrast,
         BorderSizePixel = 0,
@@ -262,7 +262,7 @@ function l_49:Watermark(cfg)
         BorderSizePixel = 0,
         Size = UDim2.new(0, 160, 0, 22),
         Position = UDim2.new(0, 6, 0, 36),
-        Parent = win.back_frame
+        Parent = win.gui  
     })
 
     toggle.MouseButton1Click:Connect(function()
