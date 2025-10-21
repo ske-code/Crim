@@ -346,7 +346,7 @@ function l_50:Label(l_167)
         Size=UDim2.new(1,-8,0,15),
         Position=UDim2.new(0,4,0,l_175.axis),
         TextXAlignment=l_170 and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left,
-        Visible=l_173.open,
+        Visible=l_183.open,
         Parent=l_174.section_frame
     })
     if l_171 then l_27.pointers[l_171]=l_175 end
@@ -437,7 +437,7 @@ BackgroundColor3=l_28.outline,
 BorderSizePixel=0,
 Size=UDim2.new(1,-8,0,20),
 Position=UDim2.new(0,4,0,l_199.axis),
-Visible=l_197.open,
+Visible=l_183.open,
 Parent=l_198.section_frame
 })
 local l_201=l_29("Frame",{
@@ -446,7 +446,7 @@ BackgroundColor3=l_28.inline,
 BorderSizePixel=0,
 Size=UDim2.new(1,-2,1,-2),
 Position=UDim2.new(0,1,0,1),
-Visible=l_197.open,
+Visible=l_183.open,
 Parent=l_200
 })
 local l_202=l_29("TextButton",{
@@ -459,7 +459,7 @@ BackgroundColor3=l_28.light_contrast,
 BorderSizePixel=0,
 Size=UDim2.new(1,-2,1,-2),
 Position=UDim2.new(0,1,0,1),
-Visible=l_197.open,
+Visible=l_183.open,
 TextXAlignment=Enum.TextXAlignment.Left,
 TextTruncate=Enum.TextTruncate.AtEnd,
 Parent=l_201
@@ -474,7 +474,7 @@ BackgroundTransparency=1,
 Size=UDim2.new(0,15,1,0),
 Position=UDim2.new(1,-17,0,0),
 TextXAlignment=Enum.TextXAlignment.Center,
-Visible=l_197.open,
+Visible=l_183.open,
 Parent=l_202
 })
 
@@ -577,7 +577,8 @@ function l_50:Checkbox(l_102)
     local l_110=self
     local l_111={current=l_105,axis=l_110.currentAxis}
     local l_112=l_29("TextButton",{
-        Name="checkbox_button",
+        Name="lol",
+        Text=" ",
         BackgroundTransparency=1,
         BorderSizePixel=0,
         Size=UDim2.new(1,0,0,15),
