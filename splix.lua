@@ -122,7 +122,7 @@ function l_27:New(l_51)
     local l_65=l_29("ScrollingFrame",{
         Name="tab_frame_inline",
         Size=UDim2.new(1,-8,1,-28),
-        Position=UDim2.new(0,4,0,40),  
+        Position=UDim2.new(0,4,0,4),  
 
         BackgroundColor3=l_28.outline,
         BorderSizePixel=0,
