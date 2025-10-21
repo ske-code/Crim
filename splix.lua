@@ -248,7 +248,7 @@ function l_49:Section(l_90)
     local l_95=self
     local l_96={window=l_94,page=l_95,currentAxis=20,side=l_93}
     
--- 动态计算 section Y 偏移
+
 local yOffset = 30
 for _, sec in pairs(l_95.sections) do
     if sec.side == l_93 then
