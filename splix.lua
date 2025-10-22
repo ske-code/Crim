@@ -130,15 +130,23 @@ function l_27:New(l_51)
         CanvasSize=UDim2.new(0,0,0,0),
         Parent=l_64
     })
+    local content_holder = l_29("Frame", {
+        Name = "content_holder",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        Parent = l_65
+    })
     local l_66=l_29("Frame",{Name="tab_frame_inline2",Size=UDim2.new(1,-2,1,-2),Position=UDim2.new(0,1,0,1),BackgroundColor3=l_28.inline,BorderSizePixel=0,Parent=l_65})
     local l_67=l_29("Frame",{Name="tab_frame",Size=UDim2.new(1,-2,1,-2),Position=UDim2.new(0,1,0,1),BackgroundColor3=l_28.light_contrast,BorderSizePixel=0,Parent=l_66})
     local l_68=l_29("Frame",{Name="tab_holder",Size=UDim2.new(1,0,0,25),Position=UDim2.new(0,0,0,0),BackgroundTransparency=1,Parent=l_67})
-    l_56.main_frame=l_58
-    l_56.back_frame=l_64
-    l_56.tab_frame=l_67
-    l_56.tab_holder=l_68
-    l_56.gui=l_57
-    l_56.scroll_frame=l_65
+    l_56.main_frame = l_58
+    l_56.back_frame = l_64
+    l_56.tab_frame = l_67
+    l_56.tab_holder = l_68
+    l_56.gui = l_57
+    l_56.scroll_frame = l_65
+    l_56.content_holder = content_holder
     
     function l_56:Move(l_69)
         l_58.Position=UDim2.new(0,l_69.X,0,l_69.Y)
@@ -197,7 +205,10 @@ function l_49:Page(l_80)
     local l_82 = l_81.name or l_81.Name or l_81.title or l_81.Title or "New Page"
     local l_83 = self
     local l_84 = {open = false, sections = {}, window = l_83, name = l_82}
-
+    if not l_83.content_holder then
+        warn("content_holder not found in window")
+        return
+    end
     local l_85 = l_29("TextButton", {
         Name = l_82.."Page",
         Text = l_82,
@@ -355,7 +366,10 @@ function l_49:Section(l_90)
     local l_94 = self.window
     local l_95 = self
     local l_96 = {window = l_94, page = l_95, currentAxis = 20, side = l_93}
-
+    if not l_95.contentFrame then
+        warn("contentFrame not found in page")
+        return
+    end
     local l_97 = l_29("Frame", {
         Name = l_92.."Section",
         BackgroundColor3 = l_28.inline,
