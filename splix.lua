@@ -208,10 +208,7 @@ function l_49:Page(l_80)
     local l_82 = l_81.name or l_81.Name or l_81.title or l_81.Title or "New Page"
     local l_83 = self
     local l_84 = {open = false, sections = {}, window = l_83, name = l_82}
-    if not l_83.content_holder then
-        warn("content_holder not found in window")
-        return
-    end
+
     local l_85 = l_29("TextButton", {
         Name = l_82.."Page",
         Text = l_82,
@@ -225,12 +222,12 @@ function l_49:Page(l_80)
         Parent = l_83.tab_holder
     })
 
-    
-
     l_84.page_button = l_85
     l_83.pages[#l_83.pages + 1] = l_84
 
     function l_84:Show()
+        local savedScroll = l_83.scroll_frame and l_83.scroll_frame.CanvasPosition or Vector2.new(0,0)
+        
         
         for _, page in pairs(l_83.pages) do
             page.page_button.BackgroundColor3 = l_28.dark_contrast
@@ -242,7 +239,7 @@ function l_49:Page(l_80)
             end
         end
 
-        
+    
         l_83.currentPage = l_84
         l_85.BackgroundColor3 = l_28.accent
         l_84.open = true
@@ -256,7 +253,24 @@ function l_49:Page(l_80)
         end
 
         l_83:UpdateScrollSize()
+        
+        
+        if l_83.scroll_frame then
+            task.wait()
+            l_83.scroll_frame.CanvasPosition = savedScroll
+        end
     end
+
+    l_85.MouseButton1Click:Connect(function()
+        l_84:Show()
+    end)
+
+    if #l_83.pages == 1 then
+        l_84:Show()
+    end
+
+    return setmetatable(l_84, l_49)
+end
 function l_49:Watermark(cfg)
     local opt = cfg or {}
     local txt = opt.text or "Splix UI"
@@ -342,10 +356,6 @@ function l_49:Section(l_90)
     local l_94 = self.window
     local l_95 = self
     local l_96 = {window = l_94, page = l_95, currentAxis = 20, side = l_93}
-    if not l_95.contentFrame then
-        warn("contentFrame not found in page")
-        return
-    end
     local l_97 = l_29("Frame", {
         Name = l_92.."Section",
         BackgroundColor3 = l_28.inline,
