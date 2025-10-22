@@ -490,7 +490,7 @@ function l_50:Button(l_177)
     l_184:Update()
     return l_185
 end
-
+--[[
 
 function l_50:Dropdown(l_189)
 local l_190=l_189 or{}
@@ -649,7 +649,7 @@ l_198.currentAxis=l_198.currentAxis+24
 l_198:Update()
 return l_199
 end
-
+--]]
 function l_50:Checkbox(l_102)
     local l_103=l_102 or{}
     local l_104=l_103.name or l_103.Name or l_103.title or l_103.Title or"Checkbox"
@@ -858,9 +858,204 @@ function l_50:Slider(l_118)
 end
 
 
+function l_50:Dropdown(l_189)
+local l_190=l_189 or{}
+local l_191=l_190.name or l_190.Name or l_190.title or l_190.Title or"Dropdown"
+local l_192=l_190.options or l_190.Options or{"Option 1","Option 2","Option 3"}
+local l_193=l_190.def or{}
+local l_194=l_190.callback or function()end
+local l_195=l_190.pointer or nil
+local l_196=self.window
+local l_197=self.page
+local l_198=self
+local l_199={open=false,selected=l_193,options=l_192,axis=l_198.currentAxis}
+
+local function updateText()
+if type(l_199.selected)~="table"then
+l_199.selected={}
+end
+local txt=table.concat(l_199.selected,", ")
+if#txt>30 then txt=string.sub(txt,1,27).."..."
+end
+return txt=="" and "Select..." or txt
+end
+
+local l_200=l_29("TextButton",{
+Name="dropdown_outline",
+Text="",
+BackgroundColor3=l_28.outline,
+BorderSizePixel=0,
+Size=UDim2.new(1,-8,0,20),
+Position=UDim2.new(0,4,0,l_199.axis),
+Visible=l_197.open,
+Parent=l_198.section_frame
+})
+local l_201=l_29("Frame",{
+Name="dropdown_inline",
+BackgroundColor3=l_28.inline,
+BorderSizePixel=0,
+Size=UDim2.new(1,-2,1,-2),
+Position=UDim2.new(0,1,0,1),
+Visible=l_197.open,
+Parent=l_200
+})
+local l_202=l_29("TextButton",{
+Name="dropdown_frame",
+Text=updateText(),
+TextSize=l_28.textsize,
+FontFace=l_28.font,
+TextColor3=l_28.textcolor,
+BackgroundColor3=l_28.light_contrast,
+BorderSizePixel=0,
+Size=UDim2.new(1,-2,1,-2),
+Position=UDim2.new(0,1,0,1),
+Visible=l_197.open,
+TextXAlignment=Enum.TextXAlignment.Left,
+TextTruncate=Enum.TextTruncate.AtEnd,
+Parent=l_201
+})
+local l_203=l_29("TextLabel",{
+Name="dropdown_arrow",
+Text="▼",
+TextSize=l_28.textsize-2,
+FontFace=l_28.font,
+TextColor3=l_28.textcolor,
+BackgroundTransparency=1,
+Size=UDim2.new(0,15,1,0),
+Position=UDim2.new(1,-17,0,0),
+TextXAlignment=Enum.TextXAlignment.Center,
+Visible=l_197.open,
+Parent=l_202
+})
+
+function l_199:Get()
+if type(l_199.selected)~="table"then
+l_199.selected={}
+end
+return l_199.selected
+end
+
+function l_199:Set(vals)
+if type(vals)~="table"then
+vals={vals}
+end
+l_199.selected=vals
+l_202.Text=updateText()
+l_194(l_199.selected)
+end
+
+function l_199:CloseOptions()
+for _,child in pairs(l_196.gui:GetChildren())do
+if child.Name=="dropdown_options_"..tostring(l_200)then child:Destroy()end
+end
+l_199.open=false
+end
+
+function l_199:ToggleOptions()
+if l_199.open then
+l_199:CloseOptions()
+return
+end
+
+l_199.open=true
+
+local l_205=l_29("Frame",{
+Name="dropdown_options_"..tostring(l_200),
+BackgroundColor3=l_28.outline,
+BorderSizePixel=0,
+Size=UDim2.new(0,l_200.AbsoluteSize.X,0,math.min(#l_192*20,120)),
+Position=UDim2.new(0,l_200.AbsolutePosition.X,0,l_200.AbsolutePosition.Y+l_200.AbsoluteSize.Y),
+ZIndex=100,
+Parent=l_196.gui
+})
+
+local l_206_scrolling=l_29("ScrollingFrame",{
+Name="options_scroll",
+BackgroundColor3=l_28.light_contrast,
+BorderSizePixel=0,
+Size=UDim2.new(1,-2,1,-2),
+Position=UDim2.new(0,1,0,1),
+CanvasSize=UDim2.new(0,0,0,#l_192*20),
+ScrollBarThickness=4,
+ScrollBarImageColor3=l_28.accent,
+ZIndex=101,
+Parent=l_205
+})
+
+local closeConnection
+closeConnection=l_3.InputBegan:Connect(function(input,gameProcessed)
+if input.UserInputType==Enum.UserInputType.MouseButton1 then
+local mousePos=l_40()
+local absPos=l_205.AbsolutePosition
+local absSize=l_205.AbsoluteSize
+
+if not(mousePos.X>=absPos.X and mousePos.X<=absPos.X+absSize.X and
+mousePos.Y>=absPos.Y and mousePos.Y<=absPos.Y+absSize.Y)then
+l_199:CloseOptions()
+if closeConnection then closeConnection:Disconnect()end
+end
+end
+end)
+
+for l_206,l_207 in pairs(l_192)do
+local isSel=false
+if type(l_199.selected)=="table"then
+for _,v in ipairs(l_199.selected)do if v==l_207 then isSel=true break end end
+end
+local l_208=l_29("TextButton",{
+Name="option_"..l_207,
+Text=l_207,
+TextSize=l_28.textsize,
+FontFace=l_28.font,
+TextColor3=l_28.textcolor,
+BackgroundColor3=isSel and l_28.accent or l_28.light_contrast,
+BorderSizePixel=0,
+Size=UDim2.new(1,0,0,20),
+Position=UDim2.new(0,0,0,(l_206-1)*20),
+Visible=true,
+ZIndex=102,
+TextXAlignment=Enum.TextXAlignment.Left,
+Parent=l_206_scrolling
+})
+l_208.MouseButton1Click:Connect(function()
+if type(l_199.selected)~="table"then
+l_199.selected={}
+end
+local exists=false
+for i,v in ipairs(l_199.selected)do
+if v==l_207 then table.remove(l_199.selected,i)exists=true break end
+end
+if not exists then table.insert(l_199.selected,l_207)end
+l_202.Text=updateText()
+for _,btn in pairs(l_206_scrolling:GetChildren())do
+if btn:IsA("TextButton")then
+local selectedNow=false
+if type(l_199.selected)=="table"then
+for _,s in ipairs(l_199.selected)do if s==btn.Text then selectedNow=true break end end
+end
+btn.BackgroundColor3=selectedNow and l_28.accent or l_28.light_contrast
+end
+end
+l_194(l_199.selected)
+end)
+end
+end
+
+l_202.MouseButton1Click:Connect(function()
+if l_196.isVisible and l_197.open then
+l_199:ToggleOptions()
+end
+end)
+
+if l_195 then l_27.pointers[l_195]=l_199 end
+l_198.currentAxis=l_198.currentAxis+24
+l_198:Update()
+return l_199
+end
+
 function l_50:Colorpicker(l_cfg)
 local l_cfg=l_cfg or{}
-local l_name=l_cfg.name or l_cfg.Name or "colorpicker"
+local l_name=l_cfg.name or l_cfg.Name or"colorpicker"
 local l_def=l_cfg.def or Color3.fromRGB(255,255,255)
 local l_transp=l_cfg.transparency or l_cfg.Transparency or 0
 local l_callback=l_cfg.callback or function()end
@@ -874,44 +1069,77 @@ local l_inline=l_29("Frame",{Name="cp_inline",BackgroundColor3=l_28.inline,Borde
 local l_frame=l_29("TextButton",{Name="cp_frame",Text=l_name,TextSize=l_28.textsize,FontFace=l_28.font,TextColor3=l_28.textcolor,BackgroundColor3=l_28.light_contrast,BorderSizePixel=0,Size=UDim2.new(1,-2,1,-2),Position=UDim2.new(0,1,0,1),Visible=l_page.open,Parent=l_inline,TextXAlignment=Enum.TextXAlignment.Left})
 local l_preview=l_29("Frame",{Name="cp_preview",BackgroundColor3=l_def,Size=UDim2.new(0,18,0,18),Position=UDim2.new(1,-22,0,1),Visible=l_page.open,Parent=l_frame})
 local l_arrow=l_29("TextLabel",{Name="cp_arrow",Text="▼",TextSize=l_28.textsize-2,FontFace=l_28.font,TextColor3=l_28.textcolor,BackgroundTransparency=1,Size=UDim2.new(0,15,1,0),Position=UDim2.new(1,-40,0,0),Visible=l_page.open,Parent=l_frame,TextXAlignment=Enum.TextXAlignment.Center})
-function l_cp:Get()return {Color=l_cp.current[1],Transparency=l_cp.current[2]}end
+
+function l_cp:Get()return{Color=l_cp.current[1],Transparency=l_cp.current[2]}end
+
 function l_cp:Set(c,t)
-if typeof(c)=="Color3" then l_cp.current[1]=c end
-if type(t)=="number" then l_cp.current[2]=t end
+if typeof(c)=="Color3"then l_cp.current[1]=c end
+if type(t)=="number"then l_cp.current[2]=t end
 l_preview.BackgroundColor3=l_cp.current[1]
+l_preview.BackgroundTransparency=1-l_cp.current[2]
 l_callback(l_cp.current[1],l_cp.current[2])
 end
-local function ClosePicker()
-for i,v in pairs(l_outline:GetChildren())do
-if v.Name=="cp_options"then v:Destroy() end
+
+function l_cp:ClosePicker()
+for i,v in pairs(l_window.gui:GetChildren())do
+if v.Name=="cp_options_"..tostring(l_outline)then v:Destroy()end
 end
 l_cp.open=false
 end
+
 function l_cp:Toggle()
-if l_cp.open then ClosePicker() return end
+if l_cp.open then
+l_cp:ClosePicker()
+return
+end
 l_cp.open=true
-local l_opts=l_29("Frame",{Name="cp_options",BackgroundColor3=l_28.outline,BorderSizePixel=0,Size=UDim2.new(1,0,0,80),Position=UDim2.new(0,0,1,2),Visible=true,Parent=l_outline})
+
+local l_opts=l_29("Frame",{
+Name="cp_options_"..tostring(l_outline),
+BackgroundColor3=l_28.outline,
+BorderSizePixel=0,
+Size=UDim2.new(0,180,0,100),
+Position=UDim2.new(0,l_outline.AbsolutePosition.X,0,l_outline.AbsolutePosition.Y+l_outline.AbsoluteSize.Y),
+ZIndex=100,
+Parent=l_window.gui
+})
+
+local closeConn
+closeConn=l_3.InputBegan:Connect(function(input,gameProcessed)
+if input.UserInputType==Enum.UserInputType.MouseButton1 then
+local pos=l_40()
+if not(pos.X>=l_opts.AbsolutePosition.X and pos.X<=l_opts.AbsolutePosition.X+l_opts.AbsoluteSize.X and
+pos.Y>=l_opts.AbsolutePosition.Y and pos.Y<=l_opts.AbsolutePosition.Y+l_opts.AbsoluteSize.Y)then
+l_cp:ClosePicker()
+if closeConn then closeConn:Disconnect()end
+end
+end
+end)
+
 local presets={"#FF3B30","#FF9500","#FFCC00","#34C759","#5AC8FA","#007AFF","#5856D6","#FF2D55"}
 for i,hex in pairs(presets)do
 local r=tonumber("0x"..string.sub(hex,2,3))
 local g=tonumber("0x"..string.sub(hex,4,5))
 local b=tonumber("0x"..string.sub(hex,6,7))
 local col=Color3.fromRGB(r,g,b)
-local btn=l_29("TextButton",{Name="preset_"..i,Text="",BackgroundColor3=col,BorderSizePixel=0,Size=UDim2.new(0,20,0,20),Position=UDim2.new(0,4+(i-1)*24,0,4),Visible=true,Parent=l_opts})
+local btn=l_29("TextButton",{Name="preset_"..i,Text="",BackgroundColor3=col,BorderSizePixel=0,Size=UDim2.new(0,20,0,20),Position=UDim2.new(0,4+(i-1)*24,0,4),Visible=true,ZIndex=101,Parent=l_opts})
 btn.MouseButton1Click:Connect(function()
 l_cp:Set(col,l_cp.current[2])
 end)
 end
-local t_label=l_29("TextLabel",{Name="transp_label",Text="Transparency",TextSize=l_28.textsize,FontFace=l_28.font,TextColor3=l_28.textcolor,BackgroundTransparency=1,Size=UDim2.new(1,-8,0,14),Position=UDim2.new(0,4,0,44),Visible=true,Parent=l_opts,TextXAlignment=Enum.TextXAlignment.Left})
-local minus=l_29("TextButton",{Name="minus",Text="-",TextSize=l_28.textsize,FontFace=l_28.font,TextColor3=l_28.textcolor,BackgroundColor3=l_28.light_contrast,BorderSizePixel=0,Size=UDim2.new(0,18,0,14),Position=UDim2.new(1,-60,0,44),Visible=true,Parent=l_opts})
-local plus=l_29("TextButton",{Name="plus",Text="+",TextSize=l_28.textsize,FontFace=l_28.font,TextColor3=l_28.textcolor,BackgroundColor3=l_28.light_contrast,BorderSizePixel=0,Size=UDim2.new(0,18,0,14),Position=UDim2.new(1,-36,0,44),Visible=true,Parent=l_opts})
-local val=l_29("TextLabel",{Name="val",Text=tostring(math.floor(l_cp.current[2]*100)).."%",TextSize=l_28.textsize,FontFace=l_28.font,TextColor3=l_28.textcolor,BackgroundTransparency=1,Size=UDim2.new(0,30,0,14),Position=UDim2.new(1,-92,0,44),Visible=true,Parent=l_opts,TextXAlignment=Enum.TextXAlignment.Right})
+
+local t_label=l_29("TextLabel",{Name="transp_label",Text="Transparency",TextSize=l_28.textsize,FontFace=l_28.font,TextColor3=l_28.textcolor,BackgroundTransparency=1,Size=UDim2.new(1,-8,0,14),Position=UDim2.new(0,4,0,44),Visible=true,ZIndex=101,Parent=l_opts,TextXAlignment=Enum.TextXAlignment.Left})
+local minus=l_29("TextButton",{Name="minus",Text="-",TextSize=l_28.textsize,FontFace=l_28.font,TextColor3=l_28.textcolor,BackgroundColor3=l_28.light_contrast,BorderSizePixel=0,Size=UDim2.new(0,18,0,14),Position=UDim2.new(1,-60,0,44),Visible=true,ZIndex=101,Parent=l_opts})
+local plus=l_29("TextButton",{Name="plus",Text="+",TextSize=l_28.textsize,FontFace=l_28.font,TextColor3=l_28.textcolor,BackgroundColor3=l_28.light_contrast,BorderSizePixel=0,Size=UDim2.new(0,18,0,14),Position=UDim2.new(1,-36,0,44),Visible=true,ZIndex=101,Parent=l_opts})
+local val=l_29("TextLabel",{Name="val",Text=tostring(math.floor(l_cp.current[2]*100)).."%",TextSize=l_28.textsize,FontFace=l_28.font,TextColor3=l_28.textcolor,BackgroundTransparency=1,Size=UDim2.new(0,30,0,14),Position=UDim2.new(1,-92,0,44),Visible=true,ZIndex=101,Parent=l_opts,TextXAlignment=Enum.TextXAlignment.Right})
+
 minus.MouseButton1Click:Connect(function()
 l_cp.current[2]=math.clamp(l_cp.current[2]-0.05,0,1)
 val.Text=tostring(math.floor(l_cp.current[2]*100)).."%"
 l_preview.BackgroundTransparency=1-l_cp.current[2]
 l_callback(l_cp.current[1],l_cp.current[2])
 end)
+
 plus.MouseButton1Click:Connect(function()
 l_cp.current[2]=math.clamp(l_cp.current[2]+0.05,0,1)
 val.Text=tostring(math.floor(l_cp.current[2]*100)).."%"
@@ -919,15 +1147,15 @@ l_preview.BackgroundTransparency=1-l_cp.current[2]
 l_callback(l_cp.current[1],l_cp.current[2])
 end)
 end
+
 l_frame.MouseButton1Click:Connect(function()
 if l_window.isVisible and l_page.open then
 l_cp:Toggle()
 end
 end)
+
 if l_pointer then l_27.pointers[l_pointer]=l_cp end
 l_section.currentAxis=l_section.currentAxis+24
 l_section:Update()
 return l_cp
 end
-
-return l_27
