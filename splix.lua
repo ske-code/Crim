@@ -270,7 +270,84 @@ function l_49:Page(l_80)
 
     return setmetatable(l_84, l_49)
 end
+function l_49:Watermark(cfg)
+    local opt = cfg or {}
+    local txt = opt.text or "Splix UI"
+    local win = self
 
+    
+    local wm_outline = l_29("Frame", {
+        Name = "watermark_outline",
+        BackgroundColor3 = l_28.outline,
+        BorderSizePixel = 0,
+        Size = UDim2.new(0, 160, 0, 28),
+        Position = UDim2.new(0, 6, 0, 6),
+        Parent = win.gui
+    })
+
+    
+    local wm_inline = l_29("Frame", {
+        BackgroundColor3 = l_28.inline,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, -2, 1, -2),
+        Position = UDim2.new(0, 1, 0, 1),
+        Parent = wm_outline
+    })
+
+    
+    local wm_inner = l_29("Frame", {
+        BackgroundColor3 = l_28.light_contrast,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, -2, 1, -2),
+        Position = UDim2.new(0, 1, 0, 1),
+        Parent = wm_inline
+    })
+
+
+    local wm_line = l_29("Frame", {
+        BackgroundColor3 = l_28.accent,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 2),
+        Position = UDim2.new(0, 0, 0, 0),
+        Parent = wm_inner
+    })
+
+    
+    local wm_label = l_29("TextLabel", {
+        Text = txt,
+        TextSize = l_28.textsize + 1,
+        FontFace = l_28.font,
+        TextColor3 = l_28.textcolor,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        Parent = wm_inner,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        Name = "watermark_label"
+    })
+
+    
+    local toggle = l_29("TextButton", {
+        Name = "toggle_ui_button",
+        Text = "Toggle UI",
+        TextSize = l_28.textsize,
+        FontFace = l_28.font,
+        TextColor3 = l_28.textcolor,
+        BackgroundColor3 = l_28.light_contrast,
+        BorderSizePixel = 0,
+        Size = UDim2.new(0, 160, 0, 22),
+        Position = UDim2.new(0, 6, 0, 36),
+        Parent = win.gui  
+    })
+
+    toggle.MouseButton1Click:Connect(function()
+        win.isVisible = not win.isVisible
+        win.main_frame.Visible = win.isVisible
+    end)
+
+    return wm_label
+end
 function l_49:Section(l_90)
     local l_91 = l_90 or {}
     local l_92 = l_91.name or l_91.Name or l_91.title or l_91.Title or "New Section"
