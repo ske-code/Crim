@@ -943,7 +943,23 @@ l_199.selected=vals
 l_202.Text=updateText()
 l_194(l_199.selected)
 end
+function l_199:AddOptions(newOptions)
+    if type(newOptions)~="table"then
+        newOptions={newOptions}
+    end
+    for _,option in ipairs(newOptions)do
+        if not table.find(l_199.options,option)then
+            table.insert(l_199.options,option)
+        end
+    end
+end
 
+function l_199:UpdateOptions(newOptions)
+    if type(newOptions)~="table"then
+        newOptions={newOptions}
+    end
+    l_199.options=newOptions
+end
 function l_199:CloseOptions()
 for _,child in pairs(l_196.gui:GetChildren())do
 if child.Name=="dropdown_options_"..tostring(l_200)then child:Destroy()end
